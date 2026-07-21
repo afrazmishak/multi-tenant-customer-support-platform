@@ -1,11 +1,10 @@
 import "dotenv/config";
-
 import app from "./app.js";
-
 import {
   connectDatabase,
   disconnectDatabase,
 } from "./config/database.js"
+import { initializeModels } from "./models/index.js";
 
 const port = Number(process.env.PORT) || 5000;
 
@@ -14,11 +13,13 @@ let isShuttingDown = false;
 
 async function startServer() {
   await connectDatabase();
-
+  await initializeModels();
 
   server = app.listen(port, () => {
     console.log(`API server running at http://localhost:${port}`);
-    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(
+      `Environment: ${process.env.NODE_ENV || "development"}`
+    );
   });
 }
 
@@ -60,7 +61,7 @@ process.on("unhandledRejection", async (error) => {
 
 process.on("uncaughtException", async (error) => {
   console.error("Uncaught exception:", error);
-  
+
   await shutdown("UNCAUGHT_EXCEPTION");
 });
 
