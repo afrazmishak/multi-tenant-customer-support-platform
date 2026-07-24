@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "db:check": "node src/scripts/checkModels.js"
+    "db:check": "node src/scripts/checkModels.js",
+    "authz:check": "node src/scripts/checkAuthorization.js"
   },
   "keywords": [],
   "author": "",
