@@ -1,6 +1,7 @@
 import { Router } from "express";
 
-import { login, registerWorkspace, } from "../controllers/auth.controller.js";
+import { getMe, login, logout, registerWorkspace, } from "../controllers/auth.controller.js";
+import { authenticate } from "../middleware/authenticate.middleware.js";
 import { validateLogin } from "../middleware/validateLogin.middleware.js";
 import { validateWorkspaceRegistration } from "../middleware/validateWorkspaceRegistration.middleware.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -17,6 +18,17 @@ router.post(
     "/login",
     validateLogin,
     asyncHandler(login)
+);
+
+router.get(
+    "/me",
+    authenticate,
+    asyncHandler(getMe)
+);
+
+router.post(
+    "/logout",
+    logout
 );
 
 export default router;

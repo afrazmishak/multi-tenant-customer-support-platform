@@ -1,6 +1,7 @@
-import { authenticateUser } from "../services/auth.service.js"
+import { authenticateUser, getCurrentUserSession } from "../services/auth.service.js"
 import { createWorkspaceRegistration } from "../services/workspaceRegistration.service.js";
 import {
+    getAuthCookieClearOptions,
     getAuthCookieName,
     getAuthCookieOptions,
     signAuthToken,
@@ -35,5 +36,27 @@ export async function login(req, res) {
         success: true,
         message: "Login successful",
         data: authentication,
+    });
+}
+
+export async function getMe(req, res) {
+    const session = await getCurrentUserSession(req.auth.user);
+
+    return res.status(200).json({
+        success: true,
+        message: "Authenticated session retrieved successfully",
+        data: session,
+    });
+}
+
+export function logout(req, res) {
+    res.clearCookie(
+        getAuthCookieName(),
+        getAuthCookieClearOptions()
+    );
+
+    return res.status(200).json({
+        success: true,
+        message: "Logout successful",
     });
 }

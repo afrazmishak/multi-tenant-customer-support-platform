@@ -67,3 +67,14 @@ export function getAuthCookieOptions() {
         maxAge: getJwtLifetimeSeconds() * 1000,
     };
 }
+
+export function getAuthCookieClearOptions() {
+    const isProduction = process.env.NODE_ENV === "production";
+
+    return {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "lax",
+        path: "/",
+    };
+}

@@ -5,7 +5,7 @@ import { Membership, User } from "../models/index.js";
 import AppError from "../utils/AppError.js";
 import { verifyPassword } from "../utils/password.js";
 
-async function getActiveMemberships(userId) {
+export async function getActiveMemberships(userId) {
     const memberships = await Membership.find({
         userId,
         status: MEMBERSHIP_STATUSES.ACTIVE,
@@ -36,6 +36,25 @@ async function getActiveMemberships(userId) {
                 status: membership.tenantId.status,
             },
         }));
+}
+
+export async function getCurrentUserSession(user) {
+    const memberships = await getActiveMemberships(user._id);
+    
+    return {
+        user: {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            status: user.status,
+            emailVerifiedAt: user.emailVerifiedAt,
+            lastLoginAt: user.lastLoginAt,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+        },
+
+        memberships,
+    };
 }
 
 export async function authenticateUser({ email, password }) {
