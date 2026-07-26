@@ -6,6 +6,15 @@ export function errorHandler(error, req, res, next) {
   let message = error.message || "Internal server error";
   let details = error.details || null;
 
+  if (
+    error instanceof SyntaxError && error.status === 400 && "body" in error
+  ) {
+    statusCode = 400;
+    errorCode = "INVALID_JSON";
+    message = "Request body contains invalid JSON";
+    details = null;
+  }
+
   if (error.name === "ValidationError") {
     statusCode = 400;
     errorCode = "DATABASE_VALIDATION_ERROR";
@@ -29,9 +38,11 @@ export function errorHandler(error, req, res, next) {
     if (duplicatedField === "email") {
       errorCode = "EMAIL_ALREADY_EXISTS";
       message = "An account with this email already exists";
+
     } else if (duplicateField === "slug") {
       errorCode = "WORKSPACE_SLUG_ALREADY_EXISTS";
       message = "This workspace URL is already taken";
+      
     } else {
       errorCode = "DUPLICATE_RECORD",
       message = "A record with these details already exists";
