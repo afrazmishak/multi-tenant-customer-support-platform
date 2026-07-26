@@ -4,8 +4,8 @@ import {
     useLocation,
 } from "react-router";
 
-import { useAuth } from "../auth/AuthContext.jsx"
-import FullPageLoader from "../components/FullPageLoader.jsx"
+import { useAuth } from "../auth/AuthContext.jsx";
+import FullPageLoader from "../components/FullPageLoader.jsx";
 
 export default function ProtectedRoute() {
     const location = useLocation();

@@ -1,4 +1,4 @@
-import { apiRequest } from "./apiClient.js"
+import { apiRequest } from "./apiClient.js";
 
 export function getWorkspaceContextRequest(workspaceSlug) {
     return apiRequest(

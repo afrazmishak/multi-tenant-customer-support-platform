@@ -9,18 +9,18 @@ import FullPageLoader from "../components/FullPageLoader.jsx";
 export default function PublicOnlyRoute() {
     const {
         isAuthenticated,
-        isBootstapping,
+        isBootstrapping,
     } = useAuth();
 
-    if (isBootstapping) {
+    if (isBootstrapping) {
         return (
             <FullPageLoader message="Checking your session..." />
         );
     }
 
-    if (!isAuthenticated) {
+    if (isAuthenticated) {
         return <Navigate to="/app" replace />;
     }
 
-    return <Outlet />
+    return <Outlet />;
 }

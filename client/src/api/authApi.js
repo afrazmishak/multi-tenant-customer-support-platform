@@ -1,7 +1,7 @@
 import { apiRequest } from "./apiClient.js";
 
 export function registerWorkspaceRequest(data) {
-    return apiRequest("/auth/register-worspace", {
+    return apiRequest("/auth/register-workspace", {
         method: "POST",
         body: JSON.stringify(data),
     });

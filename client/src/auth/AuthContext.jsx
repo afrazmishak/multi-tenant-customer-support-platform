@@ -1,12 +1,25 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
 
-import { getMeRequest, loginRequest, logoutRequest, registerWorkspaceRequest } from "../api/authApi.js";
+import {
+    getMeRequest,
+    loginRequest,
+    logoutRequest,
+    registerWorkspaceRequest,
+} from "../api/authApi.js";
 
 const AuthContext = createContext(undefined);
 
 export function AuthProvider({ children }) {
     const [session, setSession] = useState(null);
-    const [isBootstrapping, setIsBootstrapping] = useState(true);
+    const [isBootstrapping, setIsBootstrapping] =
+        useState(true);
 
     const refreshSession = useCallback(async () => {
         try {
@@ -87,6 +100,10 @@ export function AuthProvider({ children }) {
         try {
             await logoutRequest();
         } finally {
+            /*
+             * Clear local session state even when the network request
+             * fails. The protected API remains the source of truth.
+             */
             setSession(null);
         }
     }, []);

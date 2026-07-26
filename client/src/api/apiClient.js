@@ -39,9 +39,12 @@ export async function apiRequest(path, options = {}) {
             ...options,
             headers,
 
+            /*
+             * Required so the browser sends the support_session cookie
+             * and accepts Set-Cookie responses from the API.
+             */
             credentials: "include",
         });
-
     } catch {
         throw new ApiError(
             "Unable to reach the server. Confirm that the backend is running.",
@@ -68,16 +71,16 @@ export async function apiRequest(path, options = {}) {
         }
     }
 
-
     if (!response.ok) {
         throw new ApiError(
             payload?.message || "The request failed",
             {
                 status: response.status,
                 code: payload?.code || "REQUEST_FAILED",
-                error: payload?.errors || null,
+                errors: payload?.errors || null,
             }
         );
     }
 
+    return payload;
 }

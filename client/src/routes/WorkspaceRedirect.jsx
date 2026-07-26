@@ -24,8 +24,10 @@ export default function WorkspaceRedirect() {
             <section className="empty-state">
                 <h1>No active workspace</h1>
 
-                <p>You account does not currently have an active workspace membership.</p>
-
+                <p>
+                    Your account does not currently have an active
+                    workspace membership.
+                </p>
 
                 <Link
                     className="button button-primary"

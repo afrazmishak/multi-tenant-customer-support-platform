@@ -14,14 +14,15 @@ const initialForm = {
     workspaceSlug: "",
 };
 
-export default function RegisterWorkspaceSlug() {
+export default function RegisterWorkspacePage() {
     const navigate = useNavigate();
     const { registerWorkspace } = useAuth();
 
     const [form, setForm] = useState(initialForm);
     const [errorMessage, setErrorMessage] = useState("");
     const [fieldErrors, setFieldErrors] = useState({});
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] =
+        useState(false);
 
     function handleChange(event) {
         const { name, value } = event.target;
@@ -53,7 +54,8 @@ export default function RegisterWorkspaceSlug() {
             const nextFieldErrors = {};
 
             for (const validationError of error.errors || []) {
-                nextFieldErrors[validationError.field] = validationError.message;
+                nextFieldErrors[validationError.field] =
+                    validationError.message;
             }
 
             setFieldErrors(nextFieldErrors);
@@ -75,9 +77,13 @@ export default function RegisterWorkspaceSlug() {
                     </div>
                 </div>
 
-                <header className="auht-header">
+                <header className="auth-header">
                     <h1>Create your workspace</h1>
-                    <p>Register the company workspace and its first owner account.</p>
+
+                    <p>
+                        Register the company workspace and its first
+                        owner account.
+                    </p>
                 </header>
 
                 {errorMessage && (
@@ -94,6 +100,7 @@ export default function RegisterWorkspaceSlug() {
                     <div className="form-grid">
                         <label>
                             Owner name
+
                             <input
                                 name="ownerName"
                                 type="text"
@@ -112,9 +119,10 @@ export default function RegisterWorkspaceSlug() {
 
                         <label>
                             Owner email
+
                             <input
                                 name="ownerEmail"
-                                type="text"
+                                type="email"
                                 autoComplete="email"
                                 value={form.ownerEmail}
                                 onChange={handleChange}
@@ -131,6 +139,7 @@ export default function RegisterWorkspaceSlug() {
 
                     <label>
                         Password
+
                         <input
                             name="password"
                             type="password"
@@ -147,10 +156,10 @@ export default function RegisterWorkspaceSlug() {
                         )}
                     </label>
 
-                    <div />
                     <div className="form-grid">
                         <label>
                             Workspace name
+
                             <input
                                 name="workspaceName"
                                 type="text"
@@ -168,6 +177,7 @@ export default function RegisterWorkspaceSlug() {
 
                         <label>
                             Workspace URL
+
                             <input
                                 name="workspaceSlug"
                                 type="text"
@@ -192,8 +202,7 @@ export default function RegisterWorkspaceSlug() {
                     >
                         {isSubmitting
                             ? "Creating workspace..."
-                            : "Create workspace"
-                        }
+                            : "Create workspace"}
                     </button>
                 </form>
 
