@@ -21,5 +21,4 @@ export async function connectDatabase() {
 }
 export async function disconnectDatabase() {
     await mongoose.connection.close();
-    console.log("MongoDB connection closed");
 }

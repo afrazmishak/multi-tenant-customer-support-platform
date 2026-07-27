@@ -29,9 +29,7 @@ async function shutdown(signal) {
   }
 
   isShuttingDown = true;
-
-  console.log(`${signal} received. Shutting down gracefully...`);
-
+  
   if (server) {
     server.close(async () => {
       await disconnectDatabase();
@@ -66,6 +64,6 @@ process.on("uncaughtException", async (error) => {
 });
 
 startServer().catch((error) => {
-  console.error("Failed ti start the server:", error.message);
+  console.error("Failed to start the server:", error.message);
   process.exit(1);
 })

@@ -51,10 +51,6 @@ async function checkAuthorization() {
                 error.statusCode === 403 &&
             error.code === "INSUFFICIENT_PERMISSIONS"
     );
-
-    console.log("Owner authorization: passed");
-    console.log("Agent rejection: passed");
-    console.log("Role authorization vreification completed");
 }
 
 checkAuthorization().catch((error) => {

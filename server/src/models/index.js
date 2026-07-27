@@ -10,6 +10,4 @@ export async function initializeModels() {
         Tenant.init(),
         Membership.init(),
     ]);
-
-    console.log("Database models and indexes initialized");
 }

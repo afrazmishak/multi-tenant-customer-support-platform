@@ -14,13 +14,9 @@ export function getWorkspaceContext(req, res) {
 }
 
 export async function listWorkspaceMembers(req, res) {
-    console.log("Tenant context:", req.tenantContext);
-
     const members = await getWorkspaceMembers(
         req.tenantContext.tenantId
     );
-
-    console.log("Members:", members);
 
     return res.status(200).json({
         success: true,
