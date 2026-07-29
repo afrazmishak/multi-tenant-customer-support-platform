@@ -35,7 +35,7 @@ function normalizeTags(tags) {
         .map((tag) => String(tag).trim().toLowerCase())
         .filter(Boolean);
 
-    return [...new Set(normalizeTags)];
+    return [...new Set(normalizedTags)];
 }
 
 const customerSchema = new Schema(
