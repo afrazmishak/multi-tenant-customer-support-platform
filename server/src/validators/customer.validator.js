@@ -86,8 +86,7 @@ function rejectUnknownFields(input, allowedFields) {
 
     if (unknownFields.length > 0) {
         throwValidationError(
-            `Unsupported customer field${
-                unknownFields.length === 1 ? "" : "s"
+            `Unsupported customer field${unknownFields.length === 1 ? "" : "s"
             }: ${unknownFields.join(", ")}`
         );
     }
