@@ -10,7 +10,8 @@
     "start": "node src/server.js",
     "db:check": "node src/scripts/checkModels.js",
     "customer:check": "node src/scripts/verifyCustomerModel.js",
-    "authz:check": "node src/scripts/checkAuthorization.js"
+    "authz:check": "node src/scripts/checkAuthorization.js",
+    "customer:service:check": "node src/scripts/verifyCustomerService.js"
   },
   "keywords": [],
   "author": "",
