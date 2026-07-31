@@ -12,11 +12,8 @@ import {
 
 function getWorkspaceIdFromRequest(req) {
     const workspaceId =
-        req.workspace?._id ??
-        req.workspace?.id ??
-        req.workspaceId ??
-        req.workspaceContext?.workspaceId ??
-        req.workspaceContext?.workspace?._id;
+        req.tenantContext?.workspace?.id ??
+        req.tenantContext?.tenantId;
 
     if (!workspaceId) {
         throw new AppError(
@@ -30,8 +27,8 @@ function getWorkspaceIdFromRequest(req) {
 
 function getAuthenticatedUserId(req) {
     const userId =
-        req.user?._id ??
-        req.user?.id;
+        req.auth?.userId ??
+        req.tenantContext?.userId;
 
     if (!userId) {
         throw new AppError(
