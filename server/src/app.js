@@ -6,10 +6,13 @@ import healthRoutes from "./routes/health.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser";
 import workspaceRoutes from "./routes/workspace.routes.js";
+import customerRoutes from "./routes/customer.routes.js";
+
 import { notFound } from "./middleware/notFound.middleware.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
+app.use(express.json());
 
 app.disable("x-powered-by");
 
@@ -36,6 +39,11 @@ app.get("/", (req, res) => {
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/workspaces", workspaceRoutes);
+
+app.use(
+  "/api/workspaces/:workspaceSlug/customers",
+  customerRoutes
+);
 
 app.use(notFound);
 app.use(errorHandler);
