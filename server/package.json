@@ -11,7 +11,9 @@
     "db:check": "node src/scripts/checkModels.js",
     "customer:check": "node src/scripts/verifyCustomerModel.js",
     "authz:check": "node src/scripts/checkAuthorization.js",
-    "customer:service:check": "node src/scripts/verifyCustomerService.js"
+    "customer:service:check": "node src/scripts/verifyCustomerService.js",
+    "ticket:lifecycle:check": "node src/scripts/verifyTicketLifecycle.js",
+    "ticket:service:check": "node src/scripts/verifyTicketService.js"
   },
   "keywords": [],
   "author": "",
