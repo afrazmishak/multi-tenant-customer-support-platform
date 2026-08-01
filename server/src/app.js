@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser";
 import workspaceRoutes from "./routes/workspace.routes.js";
 import customerRoutes from "./routes/customer.routes.js";
+import ticketRoutes from "./routes/ticket.routes.js";
 
 import { notFound } from "./middleware/notFound.middleware.js";
 import { errorHandler } from "./middleware/error.middleware.js";
@@ -43,6 +44,11 @@ app.use("/api/workspaces", workspaceRoutes);
 app.use(
   "/api/workspaces/:workspaceSlug/customers",
   customerRoutes
+);
+
+app.use(
+  "/api/workspaces/:workspaceSlug/tickets",
+  ticketRoutes
 );
 
 app.use(notFound);
