@@ -1,7 +1,7 @@
 export const MEMBERSHIP_ROLES = Object.freeze({
-        OWNER: "owner",
-        ADMIN: "admin",
-        AGENT: "agent",
+    OWNER: "owner",
+    ADMIN: "admin",
+    AGENT: "agent",
 });
 
 export const MEMBERSHIP_ROLE_VALUES = Object.freeze(
