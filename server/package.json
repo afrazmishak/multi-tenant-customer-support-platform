@@ -13,7 +13,8 @@
     "authz:check": "node src/scripts/checkAuthorization.js",
     "customer:service:check": "node src/scripts/verifyCustomerService.js",
     "ticket:lifecycle:check": "node src/scripts/verifyTicketLifecycle.js",
-    "ticket:service:check": "node src/scripts/verifyTicketService.js"
+    "ticket:service:check": "node src/scripts/verifyTicketService.js",
+    "ticket:message:model:check": "node src/scripts/verifyTicketMessageModel.js"
   },
   "keywords": [],
   "author": "",
