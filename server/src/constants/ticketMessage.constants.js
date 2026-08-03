@@ -10,4 +10,7 @@ export const TICKET_MESSAGE_TYPE_VALUES = Object.freeze(
 export const TICKET_MESSAGE_LIMITS = Object.freeze({
     BODY_MIN_LENGTH: 1,
     BODY_MAX_LENGTH: 10_000,
+
+    DEFAULT_PAGE_SIZE: 25,
+    MAX_PAGE_SIZE: 100,
 });
