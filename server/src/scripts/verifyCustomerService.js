@@ -59,8 +59,7 @@ async function expectServiceError(
     assert.equal(
         getErrorStatusCode(receivedError),
         expectedStatusCode,
-        `Expected status ${expectedStatusCode}, received ${
-            getErrorStatusCode(receivedError) ?? "undefined"
+        `Expected status ${expectedStatusCode}, received ${getErrorStatusCode(receivedError) ?? "undefined"
         }`
     );
 
