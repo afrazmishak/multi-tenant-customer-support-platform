@@ -29,9 +29,6 @@ router.get(
     asyncHandler(getMe)
 );
 
-router.post(
-    "/logout",
-    logout
-);
+router.post("/logout", logout);
 
 export default router;
