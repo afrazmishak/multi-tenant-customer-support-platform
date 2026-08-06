@@ -15,7 +15,8 @@
     "ticket:lifecycle:check": "node src/scripts/verifyTicketLifecycle.js",
     "ticket:service:check": "node src/scripts/verifyTicketService.js",
     "ticket:message:model:check": "node src/scripts/verifyTicketMessageModel.js",
-    "ticket:message:service:check": "node src/scripts/verifyTicketMessageService.js"
+    "ticket:message:service:check": "node src/scripts/verifyTicketMessageService.js",
+    "ticket:activity:model:check": "node src/scripts/verifyTicketActivityModel.js"
   },
   "keywords": [],
   "author": "",
