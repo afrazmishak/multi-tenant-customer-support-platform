@@ -17,6 +17,15 @@ import {
 } from "../constants/ticket.constants.js";
 
 import {
+    TICKET_ACTIVITY_TYPES,
+} from "../constants/ticketActivity.constants.js";
+
+import {
+    buildTicketChanges,
+    recordTicketActivity,
+} from "./ticketActivity.service.js";
+
+import {
     validateCreateTicketInput,
     validateTicketAssignmentInput,
     validateTicketListQuery,
@@ -33,6 +42,14 @@ const ASSIGNABLE_MEMBERSHIP_ROLES = new Set([
     MEMBERSHIP_ROLES.ADMIN,
     MEMBERSHIP_ROLES.AGENT,
 ]);
+
+const TICKET_UPDATE_AUDIT_FIELDS = [
+    "subject",
+    "description",
+    "priority",
+    "category",
+    "tags",
+];
 
 function normalizeObjectId(value, fieldName) {
     if (value instanceof mongoose.Types.ObjectId) {
@@ -223,14 +240,21 @@ async function assertCustomerAvailable({
 async function assertAssignableWorkspaceMember({
     workspaceId,
     userId,
+    session = null,
 }) {
-    const membership = await Membership.findOne({
+    const query = Membership.findOne({
         tenantId: workspaceId,
         userId,
         status: "active",
-    })
-        .select("_id tenantId userId role status")
-        .lean();
+    }).select(
+        "_id tenantId userId role status"
+    );
+
+    if (session) {
+        query.session(session);
+    }
+
+    const membership = await query.lean();
 
     if (!membership) {
         throw new AppError(
@@ -256,11 +280,18 @@ async function assertAssignableWorkspaceMember({
 async function findTicketDocument({
     workspaceId,
     ticketId,
+    session = null,
 }) {
-    const ticket = await Ticket.findOne({
+    const query = Ticket.findOne({
         _id: ticketId,
         workspace: workspaceId,
     });
+
+    if (session) {
+        query.session(session);
+    }
+
+    const ticket = await query;
 
     if (!ticket) {
         throw new AppError(
@@ -378,6 +409,36 @@ function buildTicketFilter(
     }
 
     return filter;
+}
+
+function getStatusActivityType(
+    previousStatus,
+    nextStatus
+) {
+    if (
+        nextStatus ===
+        TICKET_STATUSES.CLOSED
+    ) {
+        return TICKET_ACTIVITY_TYPES.CLOSED;
+    }
+
+    if (
+        nextStatus ===
+        TICKET_STATUSES.RESOLVED
+    ) {
+        return TICKET_ACTIVITY_TYPES.RESOLVED;
+    }
+
+    if (
+        previousStatus ===
+        TICKET_STATUSES.RESOLVED &&
+        nextStatus ===
+        TICKET_STATUSES.IN_PROGRESS
+    ) {
+        return TICKET_ACTIVITY_TYPES.REOPENED;
+    }
+
+    return TICKET_ACTIVITY_TYPES.STATUS_CHANGED;
 }
 
 function buildTicketSort(sortBy, sortOrder) {
@@ -503,9 +564,60 @@ export async function createTicket({
         });
 
         try {
-            await ticket.save();
+            let createdTicket = null;
 
-            return toTicketOutput(ticket);
+            await mongoose.connection.transaction(
+                async (session) => {
+                    await ticket.save({
+                        session,
+                    });
+
+                    await recordTicketActivity({
+                        workspaceId:
+                            normalizedWorkspaceId,
+
+                        ticketId:
+                            ticket._id,
+
+                        type:
+                            TICKET_ACTIVITY_TYPES.TICKET_CREATED,
+
+                        actorUserId:
+                            normalizedActorUserId,
+
+                        metadata: {
+                            ticketNumber:
+                                ticket.ticketNumber,
+
+                            reference:
+                                buildTicketReference(
+                                    ticket.ticketNumber
+                                ),
+
+                            subject:
+                                ticket.subject,
+
+                            customerId:
+                                ticket.customer,
+
+                            priority:
+                                ticket.priority,
+
+                            source:
+                                ticket.source,
+                        },
+
+                        session,
+                    });
+
+                    createdTicket = ticket;
+                }
+            );
+
+            return toTicketOutput(
+                createdTicket
+            );
+
         } catch (error) {
             if (
                 isDuplicateTicketNumberError(
@@ -666,39 +778,99 @@ export async function updateTicket({
     const validatedInput =
         validateUpdateTicketInput(input);
 
-    const ticket =
-        await findTicketDocument({
-            workspaceId:
-                normalizedWorkspaceId,
-            ticketId:
-                normalizedTicketId,
-        });
-
-    if (
-        ticket.status ===
-        TICKET_STATUSES.CLOSED
-    ) {
-        throw new AppError(
-            "Closed tickets cannot be updated",
-            409
-        );
-    }
-
-    ticket.set(validatedInput);
-
-    const now = new Date();
-
-    ticket.updatedBy =
-        normalizedActorUserId;
-
-    ticket.lastActivityAt = now;
+    let updatedTicket = null;
 
     try {
-        await ticket.save();
+        await mongoose.connection.transaction(
+            async (session) => {
+                const ticket =
+                    await findTicketDocument({
+                        workspaceId:
+                            normalizedWorkspaceId,
 
-        return toTicketOutput(ticket);
+                        ticketId:
+                            normalizedTicketId,
+
+                        session,
+                    });
+
+                if (
+                    ticket.status ===
+                    TICKET_STATUSES.CLOSED
+                ) {
+                    throw new AppError(
+                        "Closed tickets cannot be updated",
+                        409
+                    );
+                }
+
+                // Capture the ticket BEFORE changing it.
+                const before =
+                    ticket.toObject();
+
+                // Apply validated changes.
+                ticket.set(
+                    validatedInput
+                );
+
+                const now =
+                    new Date();
+
+                ticket.updatedBy =
+                    normalizedActorUserId;
+
+                ticket.lastActivityAt =
+                    now;
+
+                // Save the ticket inside the transaction.
+                await ticket.save({
+                    session,
+                });
+
+                // Compare old values with new values.
+                const changes =
+                    buildTicketChanges(
+                        before,
+                        ticket.toObject(),
+                        TICKET_UPDATE_AUDIT_FIELDS
+                    );
+
+                // Only create an audit event if something
+                // actually changed.
+                if (
+                    changes.length > 0
+                ) {
+                    await recordTicketActivity({
+                        workspaceId:
+                            normalizedWorkspaceId,
+
+                        ticketId:
+                            normalizedTicketId,
+
+                        type:
+                            TICKET_ACTIVITY_TYPES.TICKET_UPDATED,
+
+                        actorUserId:
+                            normalizedActorUserId,
+
+                        changes,
+
+                        session,
+                    });
+                }
+
+                updatedTicket =
+                    ticket;
+            }
+        );
+
+        return toTicketOutput(
+            updatedTicket
+        );
     } catch (error) {
-        handleTicketPersistenceError(error);
+        handleTicketPersistenceError(
+            error
+        );
     }
 }
 
@@ -731,86 +903,169 @@ export async function assignTicket({
             input
         );
 
-    const ticket =
-        await findTicketDocument({
-            workspaceId:
-                normalizedWorkspaceId,
-            ticketId:
-                normalizedTicketId,
-        });
-
-    if (
-        ticket.status ===
-        TICKET_STATUSES.CLOSED
-    ) {
-        throw new AppError(
-            "Closed tickets cannot be reassigned",
-            409
-        );
-    }
-
-    const currentAssignedUserId =
-        ticket.assignedTo?.toString() ??
-        null;
-
-    if (validatedInput.assignedTo === null) {
-        if (!currentAssignedUserId) {
-            throw new AppError(
-                "Ticket is already unassigned",
-                409
-            );
-        }
-
-        ticket.assignedTo = null;
-        ticket.assignedAt = null;
-        ticket.assignedBy = null;
-    } else {
-        const normalizedAssignedUserId =
-            normalizeObjectId(
-                validatedInput.assignedTo,
-                "Assigned user ID"
-            );
-
-        if (
-            currentAssignedUserId ===
-            normalizedAssignedUserId.toString()
-        ) {
-            throw new AppError(
-                "Ticket is already assigned to this user",
-                409
-            );
-        }
-
-        await assertAssignableWorkspaceMember({
-            workspaceId:
-                normalizedWorkspaceId,
-
-            userId:
-                normalizedAssignedUserId,
-        });
-
-        ticket.assignedTo =
-            normalizedAssignedUserId;
-
-        ticket.assignedAt =
-            new Date();
-
-        ticket.assignedBy =
-            normalizedActorUserId;
-    }
-
-    ticket.updatedBy =
-        normalizedActorUserId;
-
-    ticket.lastActivityAt =
-        new Date();
+    let updatedTicket = null;
 
     try {
-        await ticket.save();
+        await mongoose.connection.transaction(
+            async (session) => {
+                // 1. Find ticket inside transaction
+                const ticket =
+                    await findTicketDocument({
+                        workspaceId:
+                            normalizedWorkspaceId,
 
-        return toTicketOutput(ticket);
+                        ticketId:
+                            normalizedTicketId,
+
+                        session,
+                    });
+
+                // 2. Closed tickets cannot be reassigned
+                if (
+                    ticket.status ===
+                    TICKET_STATUSES.CLOSED
+                ) {
+                    throw new AppError(
+                        "Closed tickets cannot be reassigned",
+                        409
+                    );
+                }
+
+                // 3. Take snapshot BEFORE assignment changes
+                const before =
+                    ticket.toObject();
+
+                const currentAssignedUserId =
+                    ticket.assignedTo
+                        ?.toString() ??
+                    null;
+
+                let nextAssignedUserId = null;
+
+                // 4. Unassignment
+                if (
+                    validatedInput.assignedTo ===
+                    null
+                ) {
+                    if (
+                        !currentAssignedUserId
+                    ) {
+                        throw new AppError(
+                            "Ticket is already unassigned",
+                            409
+                        );
+                    }
+
+                    ticket.assignedTo =
+                        null;
+
+                    ticket.assignedAt =
+                        null;
+
+                    ticket.assignedBy =
+                        null;
+                } else {
+                    // 5. Assignment
+                    nextAssignedUserId =
+                        normalizeObjectId(
+                            validatedInput.assignedTo,
+                            "Assigned user ID"
+                        );
+
+                    if (
+                        currentAssignedUserId ===
+                        nextAssignedUserId.toString()
+                    ) {
+                        throw new AppError(
+                            "Ticket is already assigned to this user",
+                            409
+                        );
+                    }
+
+                    await assertAssignableWorkspaceMember({
+                        workspaceId:
+                            normalizedWorkspaceId,
+
+                        userId:
+                            nextAssignedUserId,
+
+                        session,
+                    });
+
+                    ticket.assignedTo =
+                        nextAssignedUserId;
+
+                    ticket.assignedAt =
+                        new Date();
+
+                    ticket.assignedBy =
+                        normalizedActorUserId;
+                }
+
+                // 6. Update ticket activity metadata
+                ticket.updatedBy =
+                    normalizedActorUserId;
+
+                ticket.lastActivityAt =
+                    new Date();
+
+                // 7. Save ticket inside transaction
+                await ticket.save({
+                    session,
+                });
+
+                // 8. Build before → after audit change
+                const changes =
+                    buildTicketChanges(
+                        before,
+                        ticket.toObject(),
+                        [
+                            "assignedTo",
+                        ]
+                    );
+
+                // 9. Determine audit type
+                const activityType =
+                    nextAssignedUserId
+                        ? TICKET_ACTIVITY_TYPES.ASSIGNED
+                        : TICKET_ACTIVITY_TYPES.UNASSIGNED;
+
+                // 10. Record audit event
+                await recordTicketActivity({
+                    workspaceId:
+                        normalizedWorkspaceId,
+
+                    ticketId:
+                        normalizedTicketId,
+
+                    type:
+                        activityType,
+
+                    actorUserId:
+                        normalizedActorUserId,
+
+                    changes,
+
+                    metadata: {
+                        assignedTo:
+                            nextAssignedUserId,
+                    },
+
+                    session,
+                });
+
+                updatedTicket =
+                    ticket;
+            }
+        );
+
+        return toTicketOutput(
+            updatedTicket
+        );
     } catch (error) {
-        handleTicketPersistenceError(error);
+        handleTicketPersistenceError(
+            error
+        );
     }
 }
 
@@ -841,32 +1096,115 @@ export async function changeTicketStatus({
     const validatedInput =
         validateTicketStatusInput(input);
 
-    const ticket =
-        await findTicketDocument({
-            workspaceId:
-                normalizedWorkspaceId,
-            ticketId:
-                normalizedTicketId,
-        });
-
-    applyTicketStatusTransition({
-        ticket,
-
-        nextStatus:
-            validatedInput.status,
-
-        actorUserId:
-            normalizedActorUserId,
-
-        resolutionSummary:
-            validatedInput.resolutionSummary,
-    });
+    let updatedTicket = null;
 
     try {
-        await ticket.save();
+        await mongoose.connection.transaction(
+            async (session) => {
+                // 1. Find ticket inside the transaction
+                const ticket =
+                    await findTicketDocument({
+                        workspaceId:
+                            normalizedWorkspaceId,
 
-        return toTicketOutput(ticket);
+                        ticketId:
+                            normalizedTicketId,
+
+                        session,
+                    });
+
+                // 2. Remember status BEFORE changing it
+                const previousStatus =
+                    ticket.status;
+
+                const before =
+                    ticket.toObject();
+
+                // 3. Use your existing lifecycle logic
+                applyTicketStatusTransition({
+                    ticket,
+
+                    nextStatus:
+                        validatedInput.status,
+
+                    actorUserId:
+                        normalizedActorUserId,
+
+                    resolutionSummary:
+                        validatedInput.resolutionSummary,
+                });
+
+                // 4. Update ticket activity information
+                ticket.updatedBy =
+                    normalizedActorUserId;
+
+                ticket.lastActivityAt =
+                    new Date();
+
+                // 5. Save the ticket
+                await ticket.save({
+                    session,
+                });
+
+                // 6. Work out what kind of audit event occurred
+                const activityType =
+                    getStatusActivityType(
+                        previousStatus,
+                        ticket.status
+                    );
+
+                // 7. Record before → after status
+                const changes =
+                    buildTicketChanges(
+                        before,
+                        ticket.toObject(),
+                        [
+                            "status",
+                        ]
+                    );
+
+                // 8. Extra information for special events
+                const metadata = {};
+
+                if (
+                    activityType ===
+                    TICKET_ACTIVITY_TYPES.RESOLVED
+                ) {
+                    metadata.resolutionSummary =
+                        ticket.resolutionSummary;
+                }
+
+                // 9. Record the activity
+                await recordTicketActivity({
+                    workspaceId:
+                        normalizedWorkspaceId,
+
+                    ticketId:
+                        normalizedTicketId,
+
+                    type:
+                        activityType,
+
+                    actorUserId:
+                        normalizedActorUserId,
+
+                    changes,
+                    metadata,
+
+                    session,
+                });
+
+                updatedTicket =
+                    ticket;
+            }
+        );
+
+        return toTicketOutput(
+            updatedTicket
+        );
     } catch (error) {
-        handleTicketPersistenceError(error);
+        handleTicketPersistenceError(
+            error
+        );
     }
 }
