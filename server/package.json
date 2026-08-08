@@ -17,7 +17,8 @@
     "ticket:message:model:check": "node src/scripts/verifyTicketMessageModel.js",
     "ticket:message:service:check": "node src/scripts/verifyTicketMessageService.js",
     "ticket:activity:model:check": "node src/scripts/verifyTicketActivityModel.js",
-    "ticket:activity:service:check": "node src/scripts/verifyTicketActivityService.js"
+    "ticket:activity:service:check": "node src/scripts/verifyTicketActivityService.js",
+    "ticket:activity:integration:check": "node src/scripts/verifyTicketActivityIntegration.js"
   },
   "keywords": [],
   "author": "",
