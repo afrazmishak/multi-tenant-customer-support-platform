@@ -14,6 +14,15 @@ import {
 } from "../constants/ticketMessage.constants.js";
 
 import {
+    TICKET_ACTIVITY_ENTITY_TYPES,
+    TICKET_ACTIVITY_TYPES,
+} from "../constants/ticketActivity.constants.js";
+
+import {
+    recordTicketActivity,
+} from "./ticketActivity.service.js";
+
+import {
     validateCreateTicketMessageInput,
     validateTicketMessageListQuery,
     validateUpdateTicketMessageInput,
@@ -53,11 +62,11 @@ function toTicketMessageOutput(message) {
     const output =
         typeof message?.toObject === "function"
             ? message.toObject({
-                  virtuals: true,
-              })
+                virtuals: true,
+            })
             : {
-                  ...message,
-              };
+                ...message,
+            };
 
     return {
         ...output,
@@ -69,7 +78,7 @@ function toTicketMessageOutput(message) {
         isInternal:
             output.isInternal ??
             output.type ===
-                TICKET_MESSAGE_TYPES.INTERNAL_NOTE,
+            TICKET_MESSAGE_TYPES.INTERNAL_NOTE,
     };
 }
 
@@ -246,33 +255,32 @@ export async function createTicketMessage({
                     session,
                 });
 
-                const activityUpdate =
-                    await Ticket.updateOne(
-                        {
-                            _id:
-                                normalizedTicketId,
+                const activityUpdate = await Ticket.updateOne(
+                    {
+                        _id:
+                            normalizedTicketId,
 
-                            workspace:
-                                normalizedWorkspaceId,
+                        workspace:
+                            normalizedWorkspaceId,
 
-                            status: {
-                                $ne:
-                                    TICKET_STATUSES.CLOSED,
-                            },
+                        status: {
+                            $ne:
+                                TICKET_STATUSES.CLOSED,
                         },
-                        {
-                            $set: {
-                                lastActivityAt:
-                                    message.createdAt,
+                    },
+                    {
+                        $set: {
+                            lastActivityAt:
+                                message.createdAt,
 
-                                updatedBy:
-                                    normalizedActorUserId,
-                            },
+                            updatedBy:
+                                normalizedActorUserId,
                         },
-                        {
-                            session,
-                        }
-                    );
+                    },
+                    {
+                        session,
+                    }
+                );
 
                 if (
                     activityUpdate.matchedCount !== 1
@@ -282,6 +290,39 @@ export async function createTicketMessage({
                         409
                     );
                 }
+
+                const activityType =
+                    message.type ===
+                        TICKET_MESSAGE_TYPES.INTERNAL_NOTE
+                        ? TICKET_ACTIVITY_TYPES.INTERNAL_NOTE_ADDED
+                        : TICKET_ACTIVITY_TYPES.PUBLIC_REPLY_ADDED;
+
+                await recordTicketActivity({
+                    workspaceId:
+                        normalizedWorkspaceId,
+
+                    ticketId:
+                        normalizedTicketId,
+
+                    type:
+                        activityType,
+
+                    actorUserId:
+                        normalizedActorUserId,
+
+                    entityType:
+                        TICKET_ACTIVITY_ENTITY_TYPES.MESSAGE,
+
+                    entityId:
+                        message._id,
+
+                    metadata: {
+                        messageType:
+                            message.type,
+                    },
+
+                    session,
+                });
 
                 createdMessage = message;
             }
@@ -376,9 +417,9 @@ export async function listTicketMessages({
         totalMessages === 0
             ? 0
             : Math.ceil(
-                  totalMessages /
-                      validatedQuery.limit
-              );
+                totalMessages /
+                validatedQuery.limit
+            );
 
     return {
         messages:
@@ -604,6 +645,36 @@ export async function updateTicketMessage({
                         409
                     );
                 }
+
+                await recordTicketActivity({
+                    workspaceId:
+                        normalizedWorkspaceId,
+
+                    ticketId:
+                        normalizedTicketId,
+
+                    type:
+                        TICKET_ACTIVITY_TYPES.MESSAGE_EDITED,
+
+                    actorUserId:
+                        normalizedActorUserId,
+
+                    entityType:
+                        TICKET_ACTIVITY_ENTITY_TYPES.MESSAGE,
+
+                    entityId:
+                        message._id,
+
+                    metadata: {
+                        messageType:
+                            message.type,
+
+                        editedAt:
+                            message.editedAt,
+                    },
+
+                    session,
+                });
 
                 updatedMessage = message;
             }
