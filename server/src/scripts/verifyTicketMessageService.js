@@ -13,6 +13,9 @@ import {
     TICKET_MESSAGE_TYPES,
 } from "../constants/ticketMessage.constants.js";
 
+import TicketActivity
+    from "../models/TicketActivity.js";
+
 import {
     createTicketMessage,
     getTicketMessageById,
@@ -116,6 +119,15 @@ async function cleanFixtures() {
     }
 
     await TicketMessage.deleteMany({
+        workspace: {
+            $in: [
+                workspaceAId,
+                workspaceBId,
+            ],
+        },
+    });
+
+    await TicketActivity.deleteMany({
         workspace: {
             $in: [
                 workspaceAId,

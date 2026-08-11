@@ -10,6 +10,9 @@ import customerRoutes from "./routes/customer.routes.js";
 import ticketRoutes from "./routes/ticket.routes.js";
 import ticketMessageRoutes from "./routes/ticketMessage.routes.js";
 
+import ticketActivityRoutes
+    from "./routes/ticketActivity.routes.js";
+
 import { notFound } from "./middleware/notFound.middleware.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
@@ -50,6 +53,11 @@ app.use(
 app.use(
     "/api/workspaces/:workspaceSlug/tickets/:ticketId/messages",
     ticketMessageRoutes
+);
+
+app.use(
+    "/api/workspaces/:workspaceSlug/tickets/:ticketId/activities",
+    ticketActivityRoutes
 );
 
 app.use(
