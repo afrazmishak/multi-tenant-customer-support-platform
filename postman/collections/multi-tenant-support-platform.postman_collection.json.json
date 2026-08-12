@@ -1,0 +1,1099 @@
+{
+  "info": {
+    "_postman_id": "a2c3c4bf-8351-4b2e-b099-fecf4a2d8e58",
+    "name": "Multi-Tenant Support Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "51231608"
+  },
+  "item": [
+    {
+      "name": "Phase 2.8D - Audit Timeline",
+      "item": [
+        {
+          "name": "01 - Register Workspace Owner",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"ownerName\": \"{{ownerName}}\",\r\n  \"ownerEmail\": \"{{ownerEmail}}\",\r\n  \"password\": \"{{ownerPassword}}\",\r\n  \"workspaceName\": \"{{workspaceName}}\",\r\n  \"workspaceSlug\": \"{{workspaceSlug}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register-workspace",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register-workspace"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 - Login Audit Owner",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"{{ownerEmail}}\",\r\n    \"password\": \"{{ownerPassword}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03A - Get Logged-In User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03B - Verify Workspace Context",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/audit-timeline-test/context",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "audit-timeline-test",
+                "context"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 - Create Audit Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "const customerId = response?.data?.customer?._id;\r",
+                  "\r",
+                  "if (customerId) {\r",
+                  "    pm.environment.set(\r",
+                  "        \"customerId\",\r",
+                  "        customerId\r",
+                  "    );\r",
+                  "\r",
+                  "    console.log(\r",
+                  "        \"Saved customerId:\",\r",
+                  "        customerId\r",
+                  "    );\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"name\": \"Audit Timeline Customer\",\r\n  \"email\": \"audit.customer.28d@example.com\",\r\n  \"phone\": \"+971500000001\",\r\n  \"company\": \"Audit Test Company\",\r\n  \"jobTitle\": \"Test Customer\",\r\n  \"tags\": [\r\n    \"audit-test\",\r\n    \"phase-2-8d\"\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "customers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 - Create Audit Ticket",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "const ticketId =\r",
+                  "    response?.data?.ticket?._id;\r",
+                  "\r",
+                  "if (ticketId) {\r",
+                  "    pm.environment.set(\r",
+                  "        \"ticketId\",\r",
+                  "        ticketId\r",
+                  "    );\r",
+                  "\r",
+                  "    console.log(\r",
+                  "        \"Saved ticketId:\",\r",
+                  "        ticketId\r",
+                  "    );\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"customerId\": \"{{customerId}}\",\r\n  \"subject\": \"Phase 2.8D audit timeline verification\",\r\n  \"description\": \"Fresh ticket created to verify the complete ticket activity history.\",\r\n  \"priority\": \"normal\",\r\n  \"source\": \"internal\",\r\n  \"category\": \"Testing\",\r\n  \"tags\": [\r\n    \"phase-2-8d\",\r\n    \"audit\"\r\n  ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 - Get Audit Timeline",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/activities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "activities"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 - Update Audit Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"priority\": \"urgent\",\r\n    \"category\": \"Escalation\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "08 - Assign Audit Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"assignedTo\": \"{{ownerUserId}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/assignment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "assignment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "09 - Unassign Audit Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"assignedTo\": null\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/assignment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "assignment"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10 - Move Ticket to In Progress",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"status\": \"in_progress\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "11 - Add Public Reply",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "const publicMessageId =\r",
+                  "    response?.data?.message?._id;\r",
+                  "\r",
+                  "if (publicMessageId) {\r",
+                  "    pm.environment.set(\r",
+                  "        \"publicMessageId\",\r",
+                  "        publicMessageId\r",
+                  "    );\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"type\": \"public_reply\",\r\n    \"body\": \"hello, we are reviewing your issue and will keep you updated.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "12 - Add Internal Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();\r",
+                  "\r",
+                  "const internalNoteId =\r",
+                  "    response?.data?.message?._id;\r",
+                  "\r",
+                  "if (internalNoteId) {\r",
+                  "    pm.environment.set(\r",
+                  "        \"internalNoteId\",\r",
+                  "        internalNoteId\r",
+                  "    );\r",
+                  "\r",
+                  "    console.log(\r",
+                  "        \"Saved internalNoteId:\",\r",
+                  "        internalNoteId\r",
+                  "    );\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"type\": \"internal_note\",\r\n    \"body\": \"Internal note: verify the customer's account details before sending the next public response.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "13 - Edit Public Reply",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"body\": \"Hello, we have reviewed your issue and are continuing the investigation.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/messages/{{publicMessageId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "messages",
+                "{{publicMessageId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "14 - Resolve Audit Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"status\": \"resolved\",\r\n  \"resolutionSummary\": \"The issue was investigated and resolved successfully during Phase 2.8D audit testing.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "15 - Reopen Audit Ticket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "16 - Resolve Audit Ticket Again",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/activities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "activities"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "17 - Close Audit Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"status\": \"closed\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify the final audit timeline after the ticket was pushed from resolved to closed",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/activities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "activities"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "18 - Get Public Message After Closure",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/messages/{{publicMessageId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "messages",
+                "{{publicMessageId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "19 - Add Message to Closed Ticket",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"type\": \"public_reply\",\r\n  \"body\": \"This should not be created because the ticket is closed.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "messages"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "20 - Edit Message on Closed Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"body\": \"This edit must be rejected.\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/messages/{{publicMessageId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "messages",
+                "{{publicMessageId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "21 - Audit Timeline Descending",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/activities?sortOrder=desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "activities"
+              ],
+              "query": [
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "22 - Filter Resolved Activities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/activities?type=resolved",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "activities"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "resolved"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "23 - Filter Message Edited",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/activities?type=message_edited",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "activities"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "message_edited"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "24 - Audit Timeline Page 1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/activities?page=1&limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "activities"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "25 - Audit Timeline Page 2",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/activities?page=2&limit=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "activities"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "2"
+                },
+                {
+                  "key": "limit",
+                  "value": "5"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "26 - Resolved Activities Desending",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/activities?type=resolved&sortOrder=desc&page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "activities"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "resolved"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "27 - Invalid Activity Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}/activities?type=random_event",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}",
+                "activities"
+              ],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "random_event"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "28 - Invalid Ticket ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/not-a-valid-id/activities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "not-a-valid-id",
+                "activities"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "29 - Nonexistent Ticket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/aaaaaaaaaaaaaaaaaaaaaaaa/activities",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "aaaaaaaaaaaaaaaaaaaaaaaa",
+                "activities"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "30 - Logout Audit owner",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "31 - Register Workspace B Owner",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"ownerName\": \"{{workspaceBOwnerName}}\",\r\n    \"ownerEmail\": \"{{workspaceBOwnerEmail}}\",\r\n    \"password\": \"{{workspaceBOwnerPassword}}\",\r\n    \"workspaceName\": \"{{workspaceBName}}\",\r\n    \"workspaceSlug\": \"{{workspaceBSlug}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register-workspace",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register-workspace"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "32 - Login Workspace B Owner",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"{{workspaceBOwnerEmail}}\",\r\n    \"password\": \"{{workspaceBOwnerPassword}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "33 - Verify Workspace B Context",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceBSlug}}/context",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceBSlug}}",
+                "context"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "34 - Get Final Audit Ticket",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/workspaces/{{workspaceSlug}}/tickets/{{ticketId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "workspaces",
+                "{{workspaceSlug}}",
+                "tickets",
+                "{{ticketId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
