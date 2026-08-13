@@ -4,6 +4,9 @@ import {
   Routes,
 } from "react-router";
 
+import { useEffect } from "react";
+import { socket } from "./services/socket.js";
+
 import DashboardPage from "./pages/DashboardPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
@@ -13,6 +16,28 @@ import PublicOnlyRoute from "./routes/PublicOnlyRoute.jsx";
 import WorkspaceRedirect from "./routes/WorkspaceRedirect.jsx";
 
 export default function App() {
+  useEffect(() => {
+    socket.connect();
+
+    function handleConnect() {
+      console.log("Socket connected:", socket.id);
+    }
+
+    function handleDisconnect(reason) {
+      console.log("Socket disconnected:", reason);
+    }
+
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
+
+      socket.disconnect();
+    };
+  }, []);
+  
   return (
     <Routes>
       <Route

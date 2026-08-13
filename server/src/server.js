@@ -1,10 +1,12 @@
 import "dotenv/config";
 import app from "./app.js";
+import http from "http";
 import {
   connectDatabase,
   disconnectDatabase,
 } from "./config/database.js"
 import { initializeModels } from "./models/index.js";
+import { createSocketServer } from "./socket/socket.js";
 
 const port = Number(process.env.PORT) || 5000;
 
@@ -15,7 +17,11 @@ async function startServer() {
   await connectDatabase();
   await initializeModels();
 
-  server = app.listen(port, () => {
+  server = http.createServer(app);
+
+  createSocketServer(server);
+  
+  server.listen(port, () => {
     console.log(`API server running at http://localhost:${port}`);
     console.log(
       `Environment: ${process.env.NODE_ENV || "development"}`
