@@ -1,7 +1,9 @@
 import { Server } from "socket.io";
 
-export function createSocketServer(httpServer) {
-  const io = new Server(httpServer, {
+let io;
+
+export function initializeSocketServer(httpServer) {
+  io = new Server(httpServer, {
     cors: {
       origin: process.env.CLIENT_URL || "http://localhost:5173",
       credentials: true,
@@ -16,6 +18,14 @@ export function createSocketServer(httpServer) {
       console.log(`Reason: ${reason}`);
     });
   });
+
+  return io;
+}
+
+export function getSocketServer() {
+  if (!io) {
+    throw new Error("Socket.IO server has not been initialized");
+  }
 
   return io;
 }

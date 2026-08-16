@@ -17,7 +17,6 @@ import WorkspaceRedirect from "./routes/WorkspaceRedirect.jsx";
 
 export default function App() {
   useEffect(() => {
-    socket.connect();
 
     function handleConnect() {
       console.log("Socket connected:", socket.id);
@@ -27,17 +26,26 @@ export default function App() {
       console.log("Socket disconnected:", reason);
     }
 
+    //TEMPORARY TEST
+    function handleConnectError(error) {
+      console.error("Socket connection failed:", error.message);
+    }
+
     socket.on("connect", handleConnect);
+    socket.on("connect_error", handleConnectError); // TEMPORARY TEST
     socket.on("disconnect", handleDisconnect);
+
+    socket.connect();
 
     return () => {
       socket.off("connect", handleConnect);
+      socket.off("connect_error", handleConnectError);
       socket.off("disconnect", handleDisconnect);
 
       socket.disconnect();
     };
   }, []);
-  
+
   return (
     <Routes>
       <Route
