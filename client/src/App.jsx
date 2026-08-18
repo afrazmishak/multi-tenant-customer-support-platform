@@ -5,7 +5,7 @@ import {
 } from "react-router";
 
 import { useEffect } from "react";
-import { socket } from "./services/socket.js";
+import { socket } from "./socket/socket.js";
 
 import DashboardPage from "./pages/DashboardPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
@@ -28,7 +28,13 @@ export default function App() {
 
     //TEMPORARY TEST
     function handleConnectError(error) {
-      console.error("Socket connection failed:", error.message);
+      console.error(
+        "Socket connection failed:", error.message
+      );
+
+      console.error(
+        "Socket error code:", error.data?.code
+      );
     }
 
     socket.on("connect", handleConnect);

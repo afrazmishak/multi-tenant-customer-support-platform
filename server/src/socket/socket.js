@@ -1,5 +1,7 @@
 import { Server } from "socket.io";
 
+import { authenticateSocket } from "./socketAuth.middleware.js";
+
 let io;
 
 export function initializeSocketServer(httpServer) {
@@ -10,8 +12,13 @@ export function initializeSocketServer(httpServer) {
     },
   });
 
+  io.use(authenticateSocket);
+
   io.on("connection", (socket) => {
     console.log(`Socket connected: ${socket.id}`);
+    console.log(
+      `Authenticated user: ${socket.data.auth.userId}`
+    );
 
     socket.on("disconnect", (reason) => {
       console.log(`Socket disconnected: ${socket.id}`);
@@ -24,7 +31,9 @@ export function initializeSocketServer(httpServer) {
 
 export function getSocketServer() {
   if (!io) {
-    throw new Error("Socket.IO server has not been initialized");
+    throw new Error(
+      "Socket.IO server has not been initialized"
+    );
   }
 
   return io;
