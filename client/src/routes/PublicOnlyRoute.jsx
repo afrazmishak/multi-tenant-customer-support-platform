@@ -3,7 +3,7 @@ import {
     Outlet,
 } from "react-router";
 
-import { useAuth } from "../auth/AuthContext.jsx";
+import { useAuth } from "../auth/useAuth.js";
 import FullPageLoader from "../components/FullPageLoader.jsx";
 
 export default function PublicOnlyRoute() {

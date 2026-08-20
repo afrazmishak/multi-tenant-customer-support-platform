@@ -9,7 +9,7 @@ import {
 } from "react-router";
 
 import { getWorkspaceContextRequest } from "../api/workspaceApi.js";
-import { useAuth } from "../auth/AuthContext.jsx";
+import { useAuth } from "../auth/useAuth.js";
 import FullPageLoader from "../components/FullPageLoader.jsx";
 
 export default function DashboardPage() {

@@ -4,9 +4,6 @@ import {
   Routes,
 } from "react-router";
 
-import { useEffect } from "react";
-import { socket } from "./socket/socket.js";
-
 import DashboardPage from "./pages/DashboardPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
@@ -14,44 +11,9 @@ import RegisterWorkspacePage from "./pages/RegisterWorkspacePage.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import PublicOnlyRoute from "./routes/PublicOnlyRoute.jsx";
 import WorkspaceRedirect from "./routes/WorkspaceRedirect.jsx";
+import WorkspaceSocketConnection from "./socket/WorkspaceSocketConnection.jsx"
 
 export default function App() {
-  useEffect(() => {
-
-    function handleConnect() {
-      console.log("Socket connected:", socket.id);
-    }
-
-    function handleDisconnect(reason) {
-      console.log("Socket disconnected:", reason);
-    }
-
-    //TEMPORARY TEST
-    function handleConnectError(error) {
-      console.error(
-        "Socket connection failed:", error.message
-      );
-
-      console.error(
-        "Socket error code:", error.data?.code
-      );
-    }
-
-    socket.on("connect", handleConnect);
-    socket.on("connect_error", handleConnectError); // TEMPORARY TEST
-    socket.on("disconnect", handleDisconnect);
-
-    socket.connect();
-
-    return () => {
-      socket.off("connect", handleConnect);
-      socket.off("connect_error", handleConnectError);
-      socket.off("disconnect", handleDisconnect);
-
-      socket.disconnect();
-    };
-  }, []);
-
   return (
     <Routes>
       <Route
@@ -77,10 +39,12 @@ export default function App() {
           element={<WorkspaceRedirect />}
         />
 
-        <Route
-          path="/app/:workspaceSlug"
-          element={<DashboardPage />}
-        />
+        <Route element={<WorkspaceSocketConnection />}>
+          <Route
+            path="/app/:workspaceSlug"
+            element={<DashboardPage />}
+          />
+        </Route>
       </Route>
 
       <Route

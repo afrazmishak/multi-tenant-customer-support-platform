@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 
 import { authenticateSocket } from "./socketAuth.middleware.js";
+import { resolveSocketTenant } from "./resolveSocketTenant.middleware.js";
 
 let io;
 
@@ -13,11 +14,21 @@ export function initializeSocketServer(httpServer) {
   });
 
   io.use(authenticateSocket);
+  io.use(resolveSocketTenant);
 
   io.on("connection", (socket) => {
     console.log(`Socket connected: ${socket.id}`);
+
     console.log(
       `Authenticated user: ${socket.data.auth.userId}`
+    ); 
+
+    console.log(
+      `Workspace: ${socket.data.tenantContext.workspace.slug}`
+    );
+
+    console.log(
+      `Role: ${socket.data.tenantContext.membership.role}`
     );
 
     socket.on("disconnect", (reason) => {

@@ -1,7 +1,5 @@
 import {
-    createContext,
     useCallback,
-    useContext,
     useEffect,
     useMemo,
     useState,
@@ -14,7 +12,7 @@ import {
     registerWorkspaceRequest,
 } from "../api/authApi.js";
 
-const AuthContext = createContext(undefined);
+import AuthContext from "./authContext.js";
 
 export function AuthProvider({ children }) {
     const [session, setSession] = useState(null);
@@ -30,7 +28,10 @@ export function AuthProvider({ children }) {
 
             return nextSession;
         } catch (error) {
-            if (error.status === 401 || error.status === 403) {
+            if (
+                error.status === 401 ||
+                error.status === 403
+            ) {
                 setSession(null);
                 return null;
             }
@@ -78,7 +79,8 @@ export function AuthProvider({ children }) {
     }, []);
 
     const login = useCallback(async (credentials) => {
-        const response = await loginRequest(credentials);
+        const response =
+            await loginRequest(credentials);
 
         setSession(response.data);
 
@@ -87,9 +89,10 @@ export function AuthProvider({ children }) {
 
     const registerWorkspace = useCallback(
         async (registrationData) => {
-            const response = await registerWorkspaceRequest(
-                registrationData
-            );
+            const response =
+                await registerWorkspaceRequest(
+                    registrationData
+                );
 
             return response.data;
         },
@@ -112,8 +115,10 @@ export function AuthProvider({ children }) {
         () => ({
             session,
             user: session?.user || null,
-            memberships: session?.memberships || [],
-            isAuthenticated: Boolean(session?.user),
+            memberships: 
+                session?.memberships || [],
+            isAuthenticated: 
+                Boolean(session?.user),
             isBootstrapping,
             login,
             registerWorkspace,
@@ -135,16 +140,4 @@ export function AuthProvider({ children }) {
             {children}
         </AuthContext.Provider>
     );
-}
-
-export function useAuth() {
-    const context = useContext(AuthContext);
-
-    if (context === undefined) {
-        throw new Error(
-            "useAuth must be used inside an AuthProvider"
-        );
-    }
-
-    return context;
 }
