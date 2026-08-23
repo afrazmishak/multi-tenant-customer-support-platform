@@ -12,10 +12,8 @@ export default function WorkspaceSocketConnection() {
     }
 
     function handleConnect() {
-      console.log(
-        "Socket connected:",
-        socket.id
-      );
+      console.log("Socket connected:", socket.id);
+      socket.emit("workspace:test:broadcast");
     }
 
     function handleDisconnect(reason) {
@@ -38,12 +36,18 @@ export default function WorkspaceSocketConnection() {
       );
     }
 
+    function handleWorkspaceTestEvent(payload) {
+      console.log(
+        "Workspace test event:",
+        payload
+      );
+    }
+
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
-    socket.on(
-      "connect_error",
-      handleConnectError
-    );
+    socket.on("connect_error", handleConnectError);
+    socket.on("workspace:test:event", handleWorkspaceTestEvent);
+
 
     socket.auth = {
       workspaceSlug,
@@ -61,7 +65,7 @@ export default function WorkspaceSocketConnection() {
         "connect_error",
         handleConnectError
       );
-
+      socket.off("workspace:test:event", handleWorkspaceTestEvent);
       socket.disconnect();
     };
   }, [workspaceSlug]);
