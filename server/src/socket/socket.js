@@ -37,22 +37,6 @@ export function initializeSocketServer(httpServer) {
     console.log(`Role: ${socket.data.tenantContext.membership.role}`);
     console.log(`Joined room: ${workspaceRoom}`);
 
-    console.log("Socket rooms:",
-      [...socket.rooms]
-    );
-
-    // TEMPORARY TEST EVENT
-    socket.on("workspace:test:broadcast", () => {
-      io.to(workspaceRoom).emit(
-        "workspace:test:event",
-        {
-          workspaceSlug: workspace.slug,
-          fromUserId: userId,
-          message: "Workspace room test successful",
-        }
-      );
-    });
-
     socket.on("disconnect", (reason) => {
       console.log(`Socket disconnected: ${socket.id}`);
       console.log(`Reason: ${reason}`);
