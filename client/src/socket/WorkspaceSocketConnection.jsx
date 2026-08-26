@@ -50,25 +50,23 @@ export default function WorkspaceSocketConnection() {
     socket.on("ticket:message:created", handleTicketMessageCreated);
 
     socket.on("connect", handleConnect);
+
     socket.on("disconnect", handleDisconnect);
+
     socket.on("connect_error", handleConnectError);
 
-    socket.auth = {
-      workspaceSlug,
-    };
+    socket.auth = { workspaceSlug };
 
     socket.connect();
 
     return () => {
+      socket.off("ticket:message:created", handleTicketMessageCreated);
+
       socket.off("connect", handleConnect);
-      socket.off(
-        "disconnect",
-        handleDisconnect
-      );
-      socket.off(
-        "connect_error",
-        handleConnectError
-      );
+
+      socket.off("disconnect", handleDisconnect);
+
+      socket.off("connect_error", handleConnectError);
 
       socket.disconnect();
     };
