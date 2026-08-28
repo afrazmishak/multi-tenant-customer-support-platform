@@ -10,7 +10,8 @@ import {
 
 //Importing to give this controller access from ../socket/ticketRealtime.js to give controller access to connect the HTTP controller to the real-time layer
 import {
-    emitTicketMessageCreated
+    emitTicketMessageCreated,
+    emitTicketMessageUpdated,
 } from "../socket/ticketRealtime.js"
 
 function getWorkspaceIdFromRequest(req) {
@@ -185,6 +186,13 @@ export const updateTicketMessageController =
                 messageId,
                 actorUserId,
                 input: req.body,
+            });
+
+            //Persist first, publish second
+            emitTicketMessageUpdated({
+                workspaceId,
+                ticketId,
+                message,
             });
 
         res.status(200).json({
