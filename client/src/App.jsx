@@ -11,7 +11,7 @@ import RegisterWorkspacePage from "./pages/RegisterWorkspacePage.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import PublicOnlyRoute from "./routes/PublicOnlyRoute.jsx";
 import WorkspaceRedirect from "./routes/WorkspaceRedirect.jsx";
-import WorkspaceSocketConnection from "./socket/WorkspaceSocketConnection.jsx"
+import WorkspaceSocketConnection from "./routes/WorkspaceSocketConnection.jsx";
 
 export default function App() {
   return (
