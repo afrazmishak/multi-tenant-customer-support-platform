@@ -12,10 +12,7 @@ export default function WorkspaceSocketConnection() {
     }
 
     function handleConnect() {
-      console.log(
-        "Socket connected:",
-        socket.id
-      );
+      console.log("Socket connected:", socket.id);
     }
 
     function handleDisconnect(reason) {
