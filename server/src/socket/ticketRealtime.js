@@ -2,7 +2,7 @@
 import { getSocketServer } from './socket.js';
 
 //Importing to generate a predictable room name
-import { getTicketRoom } from "./socketRooms.js"
+import { getTicketRoom, getWorkspaceRoom, } from "./socketRooms.js"
 
 //emitTicketMessageCreated function represents created, a completely new message exists
 export function emitTicketMessageCreated({
@@ -44,6 +44,22 @@ export function emitTicketMessageUpdated({
         {
             ticketId,
             message,
+        }
+    );
+}
+
+export function emitTicketUpdated({
+    workspaceId,
+    ticket,
+}) {
+    const io = getSocketServer();
+
+    const workspaceRoom = getWorkspaceRoom(workspaceId);
+
+    io.to(workspaceRoom).emit(
+        "ticket:updated",
+        {
+            ticket,
         }
     );
 }
