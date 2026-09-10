@@ -2,8 +2,8 @@ import { Server } from "socket.io";
 
 import { authenticateSocket } from "./socketAuth.middleware.js";
 import { resolveSocketTenant } from "./resolveSocketTenant.middleware.js";
-
 import { getWorkspaceRoom, } from "./socketRooms.js";
+import { registerTicketRoomHandlers, } from "./ticketRoom.handlers.js";
 
 let io;
 
@@ -32,13 +32,18 @@ export function initializeSocketServer(httpServer) {
     socket.join(workspaceRoom);
 
     console.log(`Socket connected: ${socket.id}`);
-    console.log(`Authenticated user: ${socket.data.auth.userId}`);
-    console.log(`Workspace: ${socket.data.tenantContext.workspace.slug}`);
-    console.log(`Role: ${socket.data.tenantContext.membership.role}`);
+    console.log(`Authenticated user: ${userId}`);
+    console.log(`Workspace: ${workspace.slug}`);
+    console.log(`Role: ${membership.role}`);
     console.log(`Joined room: ${workspaceRoom}`);
 
+    // Register ticket-specific socket events
+    registerTicketRoomHandlers(socket);
+
     socket.on("disconnect", (reason) => {
-      console.log(`Socket disconnected: ${socket.id}`);
+      console.log(
+        `Socket disconnected: ${socket.id}`
+      );
       console.log(`Reason: ${reason}`);
     });
   });
