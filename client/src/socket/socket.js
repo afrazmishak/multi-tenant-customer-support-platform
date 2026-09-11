@@ -7,3 +7,7 @@ export const socket = io(
     withCredentials: true,
   }
 );
+
+if (import.meta.env.DEV) {
+  window.supportSocket = socket;
+}
