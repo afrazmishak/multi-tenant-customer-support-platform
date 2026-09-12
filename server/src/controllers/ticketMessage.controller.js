@@ -8,6 +8,11 @@ import {
     updateTicketMessage,
 } from "../services/ticketMessage.service.js";
 
+//Importing to give this controller access from ../socket/ticketRealtime.js to give controller access to connect the HTTP controller to the real-time layer
+import {
+    emitTicketMessageCreated
+} from "../socket/ticketRealtime.js"
+
 function getWorkspaceIdFromRequest(req) {
     const workspaceId =
         req.tenantContext?.workspace?.id ??
@@ -81,6 +86,12 @@ export const createTicketMessageController =
                 ticketId,
                 actorUserId,
                 input: req.body,
+            });
+
+            emitTicketMessageCreated({
+                workspaceId,
+                ticketId,
+                message,
             });
 
         const responseMessage =

@@ -25,7 +25,7 @@ export async function login(req, res) {
     );
 
     const token = signAuthToken(authentication.user.id);
-
+    
     res.cookie(
         getAuthCookieName(),
         token,
