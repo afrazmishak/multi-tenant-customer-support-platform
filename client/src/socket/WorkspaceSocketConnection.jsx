@@ -12,7 +12,10 @@ export default function WorkspaceSocketConnection() {
     }
 
     function handleConnect() {
-      console.log("Socket connected:", socket.id);
+      console.log(
+        "Socket connected:",
+        socket.id
+      );
     }
 
     function handleDisconnect(reason) {
@@ -35,6 +38,17 @@ export default function WorkspaceSocketConnection() {
       );
     }
 
+    const handleTicketMessageCreated = (
+      payload
+    ) => {
+      console.log(
+        "Real-time ticket message received:",
+        payload
+      );
+    };
+
+    socket.on("ticket:message:created", handleTicketMessageCreated);
+
     socket.on("connect", handleConnect);
     socket.on("disconnect", handleDisconnect);
     socket.on("connect_error", handleConnectError);
@@ -55,7 +69,7 @@ export default function WorkspaceSocketConnection() {
         "connect_error",
         handleConnectError
       );
-      
+
       socket.disconnect();
     };
   }, [workspaceSlug]);
