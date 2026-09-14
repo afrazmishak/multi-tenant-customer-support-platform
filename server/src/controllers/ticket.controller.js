@@ -1,5 +1,6 @@
 import AppError from "../utils/AppError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { emitTicketUpdated, } from "../socket/ticketRealtime.js";
 
 import {
     assignTicket,
@@ -166,11 +167,17 @@ export const changeTicketStatusController =
         const actorUserId =
             getAuthenticatedUserId(req);
 
-        const ticket = await changeTicketStatus({
+        const ticket =
+            await changeTicketStatus({
+                workspaceId,
+                ticketId: req.params.ticketId,
+                actorUserId,
+                input: req.body,
+            });
+
+        emitTicketUpdated({
             workspaceId,
-            ticketId: req.params.ticketId,
-            actorUserId,
-            input: req.body,
+            ticket,
         });
 
         res.status(200).json({
