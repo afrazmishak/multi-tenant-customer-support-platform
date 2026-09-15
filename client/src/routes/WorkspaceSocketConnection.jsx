@@ -53,6 +53,13 @@ export default function WorkspaceSocketConnection() {
       );
     }
 
+    function handleTicketUpdated(payload) {
+      console.log(
+        "Real-time ticket updated:",
+        payload
+      )
+    }
+
     socket.on(
       "ticket:message:created",
       handleTicketMessageCreated
@@ -78,6 +85,11 @@ export default function WorkspaceSocketConnection() {
       handleConnectError
     );
 
+    socket.on(
+      "ticket:updated",
+      handleTicketUpdated
+    );
+
     socket.auth = {
       workspaceSlug
     };
@@ -93,6 +105,11 @@ export default function WorkspaceSocketConnection() {
       socket.off(
         "ticket:message:updated",
         handleTicketMessageUpdated
+      );
+
+      socket.off(
+        "ticket:updated",
+        handleTicketUpdated
       );
 
       socket.off(
