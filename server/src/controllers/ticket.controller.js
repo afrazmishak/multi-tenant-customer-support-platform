@@ -161,8 +161,7 @@ export const assignTicketController = asyncHandler(
 
 export const changeTicketStatusController =
     asyncHandler(async (req, res) => {
-        const workspaceId =
-            getWorkspaceIdFromRequest(req);
+        const workspaceId = getWorkspaceIdFromRequest(req);
 
         const actorUserId =
             getAuthenticatedUserId(req);
