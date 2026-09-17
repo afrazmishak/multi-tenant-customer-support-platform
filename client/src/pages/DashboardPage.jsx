@@ -22,15 +22,12 @@ export default function DashboardPage() {
         logout,
     } = useAuth();
 
-    const [tenantContext, setTenantContext] =
-        useState(null);
+    const [tenantContext, setTenantContext] = useState(null);
 
-    const [errorMessage, setErrorMessage] =
-        useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
     const [isLoading, setIsLoading] = useState(true);
-    const [isLoggingOut, setIsLoggingOut] =
-        useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     useEffect(() => {
         let cancelled = false;
