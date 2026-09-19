@@ -31,3 +31,33 @@ export function addUserSocket({
 
     return sockets.size;
 }
+
+export function removeUserSocket({
+    tenantId,
+    userId,
+    socketId,
+}) {
+    const users = workspacePresence.get(tenantId);
+
+    if (!users) {
+        return 0;
+    }
+
+    const sockets = users.get(userId);
+
+    if (!sockets) {
+        return 0;
+    }
+
+    sockets.delete(socketId);
+
+    if (sockets.size === 0) {
+        users.delete(userId);
+    }
+
+    if (users.size === 0) {
+        workspacePresence.delete(tenantId);
+    }
+
+    return sockets.size;
+}
