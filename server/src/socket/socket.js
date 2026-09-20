@@ -4,6 +4,7 @@ import { authenticateSocket } from "./socketAuth.middleware.js";
 import { resolveSocketTenant } from "./resolveSocketTenant.middleware.js";
 import { getWorkspaceRoom, } from "./socketRooms.js";
 import { registerTicketRoomHandlers, } from "./ticketRoom.handlers.js";
+import { addUserSocket, removeUserSocket, } from "./presenceManager.js";
 
 let io;
 
@@ -31,20 +32,57 @@ export function initializeSocketServer(httpServer) {
 
     socket.join(workspaceRoom);
 
+    // Register socket presence
+    const socketCount = addUserSocket({
+      tenantId,
+      userId,
+      socketId: socket.id,
+    });
+
+    // First connection for the user
+    if (socket === 1) {
+      io.to(workspaceRoom).emit(
+        "presence:user:online",
+        {
+          userId,
+          online: true
+        }
+      );
+    }
+
     console.log(`Socket connected: ${socket.id}`);
     console.log(`Authenticated user: ${userId}`);
     console.log(`Workspace: ${workspace.slug}`);
     console.log(`Role: ${membership.role}`);
     console.log(`Joined room: ${workspaceRoom}`);
 
-    // Register ticket-specific socket events
+    // Presetve existing ticket room handlers
     registerTicketRoomHandlers(socket);
 
     socket.on("disconnect", (reason) => {
+      const remainingSockets = removeUserSocket({
+        tenantId,
+        userId,
+        socketId: socket.id,
+      });
+
+      // Last connection for the user
+      if (remainingSockets === 0) {
+        io.to(workspaceRoom).emit(
+          "presence:user:offline",
+          {
+            userId,
+            online: false,
+          }
+        );
+      }
+
       console.log(
         `Socket disconnected: ${socket.id}`
       );
       console.log(`Reason: ${reason}`);
+
+      console.log(`Remaining user sockets: ${remainingSockets}`);
     });
   });
 
