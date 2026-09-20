@@ -1,15 +1,18 @@
 const workspacePresence = new Map();
 
 function getWorkspacePresence(tenantId) {
-    if (!workspacePresence.has(tenantId)) {
+    const workspaceKey = String(tenantId);
+
+    if (!workspacePresence.has(workspaceKey)) {
         workspacePresence.set(
-            tenantId,
+            workspaceKey,
             new Map()
         );
     }
 
-    return workspacePresence.get(tenantId);
+    return workspacePresence.get(workspaceKey);
 }
+
 
 export function addUserSocket({
     tenantId,
@@ -17,20 +20,22 @@ export function addUserSocket({
     socketId,
 }) {
     const users = getWorkspacePresence(tenantId);
+    const userKey = String(userId);
 
-    if (!userId.has(userId)) {
+    if (!users.has(userKey)) {
         users.set(
-            userId,
+            userKey,
             new Set()
         );
     }
 
-    const sockets = users.get(userId);
+    const sockets = users.get(userKey);
 
-    socketId.add(socketId);
+    sockets.add(socketId);
 
     return sockets.size;
 }
+
 
 export function removeUserSocket({
     tenantId,

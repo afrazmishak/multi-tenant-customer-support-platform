@@ -39,12 +39,31 @@ export function initializeSocketServer(httpServer) {
       socketId: socket.id,
     });
 
+    console.log("[PRESENCE CONNECT]", {
+      workspace: workspace.slug,
+      userId: String(userId),
+      socketId: socket.id,
+      socketCount,
+      workspaceRoom,
+    });
+
+    console.log(
+      "[ONLINE CONDITION]",
+      socketCount === 1
+    );
+
     // First connection for the user
-    if (socket === 1) {
+    if (socketCount === 1) {
+      console.log("[EMITTING ONLINE]",{
+        workspace: workspace.slug,
+        userId: String(userId),
+        workspaceRoom,
+      });
+
       io.to(workspaceRoom).emit(
         "presence:user:online",
         {
-          userId,
+          userId: String(userId),
           online: true
         }
       );
@@ -64,6 +83,13 @@ export function initializeSocketServer(httpServer) {
         tenantId,
         userId,
         socketId: socket.id,
+      });
+
+      console.log("[PRESENCE DISCONNECT]", {
+        workspace: workspace.slug,
+        userId: String(userId),
+        socketId: socket.id,
+        remainingSockets,
       });
 
       // Last connection for the user

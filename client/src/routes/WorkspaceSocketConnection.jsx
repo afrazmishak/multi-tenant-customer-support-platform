@@ -60,6 +60,14 @@ export default function WorkspaceSocketConnection() {
       )
     }
 
+    function handleUserOnline(payload) {
+      console.log("User came online:", payload);
+    }
+
+    function handleUserOffline(payload) {
+      console.log("User went offline:", payload);
+    }
+
     socket.on(
       "ticket:message:created",
       handleTicketMessageCreated
@@ -68,6 +76,11 @@ export default function WorkspaceSocketConnection() {
     socket.on(
       "ticket:message:updated",
       handleTicketMessageUpdated
+    );
+
+    socket.on(
+      "ticket:updated",
+      handleTicketUpdated
     );
 
     socket.on(
@@ -81,14 +94,20 @@ export default function WorkspaceSocketConnection() {
     );
 
     socket.on(
+      "presence:user:online",
+      handleUserOnline
+    );
+
+    socket.on(
+      "presence:user:offline",
+      handleUserOffline
+    );
+
+    socket.on(
       "connect_error",
       handleConnectError
     );
 
-    socket.on(
-      "ticket:updated",
-      handleTicketUpdated
-    );
 
     socket.auth = {
       workspaceSlug
@@ -125,6 +144,16 @@ export default function WorkspaceSocketConnection() {
       socket.off(
         "connect_error",
         handleConnectError
+      );
+
+      socket.off(
+        "presence:user:online",
+        handleUserOnline
+      );
+
+      socket.off(
+        "presence:user:offline",
+        handleUserOffline
       );
 
       socket.disconnect();
