@@ -68,6 +68,12 @@ export default function WorkspaceSocketConnection() {
       console.log("User went offline:", payload);
     }
 
+    function handlePresenceSnapshot(payload) {
+      console.log(
+        "Initial presence snapshot:", payload
+      );
+    }
+
     socket.on(
       "ticket:message:created",
       handleTicketMessageCreated
@@ -94,6 +100,11 @@ export default function WorkspaceSocketConnection() {
     );
 
     socket.on(
+      "presence:snapshot",
+      handlePresenceSnapshot
+    )
+
+    socket.on(
       "presence:user:online",
       handleUserOnline
     );
@@ -102,6 +113,7 @@ export default function WorkspaceSocketConnection() {
       "presence:user:offline",
       handleUserOffline
     );
+
 
     socket.on(
       "connect_error",
@@ -144,6 +156,11 @@ export default function WorkspaceSocketConnection() {
       socket.off(
         "connect_error",
         handleConnectError
+      );
+
+      socket.off(
+        "presence:snapshot",
+        handlePresenceSnapshot
       );
 
       socket.off(

@@ -66,3 +66,16 @@ export function removeUserSocket({
 
     return sockets.size;
 }
+
+
+export function getOnlineUserIds(tenantId) {
+    const workspaceKey = String(tenantId);
+
+    const users = workspacePresence.get(workspaceKey);
+
+    if (!users) {
+        return [];
+    }
+
+    return [...users.keys()];
+}

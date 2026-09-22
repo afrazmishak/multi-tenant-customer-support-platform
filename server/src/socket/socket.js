@@ -4,7 +4,7 @@ import { authenticateSocket } from "./socketAuth.middleware.js";
 import { resolveSocketTenant } from "./resolveSocketTenant.middleware.js";
 import { getWorkspaceRoom, } from "./socketRooms.js";
 import { registerTicketRoomHandlers, } from "./ticketRoom.handlers.js";
-import { addUserSocket, removeUserSocket, } from "./presenceManager.js";
+import { addUserSocket, removeUserSocket, getOnlineUserIds, } from "./presenceManager.js";
 
 let io;
 
@@ -39,6 +39,34 @@ export function initializeSocketServer(httpServer) {
       socketId: socket.id,
     });
 
+    const onlineUserIds = getOnlineUserIds(tenantId);
+
+    socket.emit("presence:snapshot",
+      {
+        userIds: onlineUserIds,
+      });
+
+    console.log("[PRESENCE SNAPSHOT]", {
+      workspace: workspace.slug,
+      userId: String(userId),
+      onlineUserIds,
+    });
+
+    if (socketCount === 1) {
+      console.log("[EMITTING ONLINE]", {
+        workspace: workspace.slug,
+        userId: String(userId),
+      });
+
+      socket.to(workspaceRoom).emit(
+        "presence:user:online",
+        {
+          userId: String(userId),
+          online: true,
+        }
+      );
+    }
+
     console.log("[PRESENCE CONNECT]", {
       workspace: workspace.slug,
       userId: String(userId),
@@ -46,28 +74,6 @@ export function initializeSocketServer(httpServer) {
       socketCount,
       workspaceRoom,
     });
-
-    console.log(
-      "[ONLINE CONDITION]",
-      socketCount === 1
-    );
-
-    // First connection for the user
-    if (socketCount === 1) {
-      console.log("[EMITTING ONLINE]",{
-        workspace: workspace.slug,
-        userId: String(userId),
-        workspaceRoom,
-      });
-
-      io.to(workspaceRoom).emit(
-        "presence:user:online",
-        {
-          userId: String(userId),
-          online: true
-        }
-      );
-    }
 
     console.log(`Socket connected: ${socket.id}`);
     console.log(`Authenticated user: ${userId}`);
