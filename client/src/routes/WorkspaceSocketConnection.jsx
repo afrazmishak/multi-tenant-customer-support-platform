@@ -1,10 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useParams } from "react-router";
 
 import { socket } from "../socket/socket.js";
 
 export default function WorkspaceSocketConnection() {
   const { workspaceSlug } = useParams();
+
+  const [presence, setPresence] = useState({
+    workspaceSlug: null,
+    userIds: [],
+  });
+
+  const onlineUserIds =
+    presence.workspaceSlug === workspaceSlug
+      ? presence.userIds
+      : [];
 
   useEffect(() => {
     if (!workspaceSlug) {
@@ -20,6 +30,11 @@ export default function WorkspaceSocketConnection() {
         "Socket disconnected:",
         reason
       );
+
+      setPresence({
+        workspaceSlug: null,
+        userIds: [],
+      })
     }
 
     // TEMPORARY TEST
@@ -60,17 +75,84 @@ export default function WorkspaceSocketConnection() {
       )
     }
 
+
     function handleUserOnline(payload) {
-      console.log("User came online:", payload);
+      const userId = payload?.userId;
+
+      if (!userId) {
+        return;
+      }
+
+      const normalizedUserId = String(userId);
+
+      setPresence((previous) => {
+        if (previous.workspaceSlug !== workspaceSlug) {
+          return previous;
+        }
+
+        if (previous.userIds.includes(normalizedUserId)) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          userIds: [
+            ...previous.userIds,
+            normalizedUserId,
+          ],
+        };
+      });
+
+      console.log(
+        "User came online:",
+        payload
+      );
     }
+
+
 
     function handleUserOffline(payload) {
-      console.log("User went offline:", payload);
+      const userId = payload?.userId;
+
+      if (!userId) {
+        return;
+      }
+
+      const normalizedUserId = String(userId);
+
+      setPresence((previous) => {
+        if (previous.workspaceSlug !== workspaceSlug) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          userIds: previous.userIds.filter(
+            (id) => id !== normalizedUserId
+          ),
+        };
+      });
+
+      console.log(
+        "User went offline:",
+        payload
+      );
     }
 
+
     function handlePresenceSnapshot(payload) {
+      const userIds = Array.isArray(payload?.userIds)
+        ? [...new Set(payload.userIds.map(String))]
+        : [];
+
+      setPresence({
+        workspaceSlug,
+        userIds,
+      });
+
       console.log(
-        "Initial presence snapshot:", payload
+        "Initial presence snapshot:",
+        userIds
       );
     }
 
@@ -177,5 +259,31 @@ export default function WorkspaceSocketConnection() {
     };
   }, [workspaceSlug]);
 
-  return <Outlet />;
+
+  return (
+    <>
+      <section>
+        <h3>
+          Online Users ({onlineUserIds.length})
+        </h3>
+
+        {presence.workspaceSlug !== workspaceSlug ? (
+          <p>Waiting for presence snapshot...</p>
+        ) : onlineUserIds.length === 0 ? (
+          <p>No users currently reported online.</p>
+        ) : (
+          <ul>
+            {onlineUserIds.map((userId) => (
+              <li key={userId}>
+                🟢 {userId}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <Outlet />
+    </>
+  );
+
 }
