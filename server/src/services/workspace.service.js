@@ -45,3 +45,29 @@ export async function getWorkspaceMembers(tenantId) {
             }
         });
 }
+
+export async function listWorkspacePresenceDirectory(tenantId) {
+    const memberships = await Membership.find({
+        tenantId,
+        status: MEMBERSHIP_STATUSES.ACTIVE,
+    })
+        .select("userId role")
+        .populate({
+            path: "userId",
+            select: "_id name status",
+        })
+        .lean();
+
+    return memberships
+        .filter(
+            (membership) =>
+                membership.userId?.status === "active"
+        )
+        .map((membership) => ({
+            user: {
+                id: String(membership.userId._id),
+                name: membership.userId.name,
+            },
+            role: membership.role,
+        }));
+}
