@@ -6,6 +6,7 @@ import {
 
 import {
     getWorkspaceContext,
+    getWorkspacePresenceDirectoryController,
     listWorkspaceMembers,
 } from "../controllers/workspace.controller.js";
 import { authenticate } from "../middleware/authenticate.middleware.js";
@@ -31,6 +32,17 @@ router.get(
         MEMBERSHIP_ROLES.ADMIN
     ),
     asyncHandler(listWorkspaceMembers)
+);
+
+router.get(
+    "/:workspaceSlug/directory",
+    resolveTenantContext,
+    authorizeRoles(
+        MEMBERSHIP_ROLES.OWNER,
+        MEMBERSHIP_ROLES.ADMIN,
+        MEMBERSHIP_ROLES.AGENT
+    ),
+    getWorkspacePresenceDirectoryController
 );
 
 export default router;

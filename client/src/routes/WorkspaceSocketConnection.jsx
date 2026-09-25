@@ -6,15 +6,35 @@ import { socket } from "../socket/socket.js";
 export default function WorkspaceSocketConnection() {
   const { workspaceSlug } = useParams();
 
+  // Purpose: Who is online right now?
   const [presence, setPresence] = useState({
     workspaceSlug: null,
     userIds: [],
+  });
+
+  // Purpose: Who belongs to this workspace?
+  const [directory, setDirectory] = useState({
+    workspaceSlug: null,
+    members: [],
+    error: null
   });
 
   const onlineUserIds =
     presence.workspaceSlug === workspaceSlug
       ? presence.userIds
       : [];
+
+
+  const onlineUserSet = new Set(onlineUserIds);
+
+  const workspaceMembers =
+    directory.workspaceSlug === workspaceSlug
+      ? directory.members
+      : [];
+
+  const presenceReady =
+    presence.workspaceSlug === workspaceSlug;
+
 
   useEffect(() => {
     if (!workspaceSlug) {
@@ -259,28 +279,120 @@ export default function WorkspaceSocketConnection() {
     };
   }, [workspaceSlug]);
 
+  useEffect(() => {
+    if (!workspaceSlug) {
+      return
+    }
+
+    const controller = new AbortController();
+
+    async function loadWorkspaceDirectory() {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/workspaces/${encodeURIComponent(workspaceSlug)}/directory`,
+          {
+            credentials: "include",
+            signal: controller.signal,
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Directory request failed: ${response.status}`
+          );
+        }
+
+        const result = await response.json();
+
+        setDirectory({
+          workspaceSlug,
+          members: Array.isArray(result?.data?.members)
+            ? result.data.members
+            : [],
+          error: null,
+        });
+      } catch (error) {
+        if (error.name === "AbortError") {
+          return;
+        }
+
+        setDirectory({
+          workspaceSlug,
+          members: [],
+          error: error.message,
+        });
+      }
+    }
+
+    loadWorkspaceDirectory();
+
+    return () => {
+      controller.abort();
+    };
+  }, [workspaceSlug]);
+
 
   return (
     <>
+
       <section>
         <h3>
-          Online Users ({onlineUserIds.length})
+          Workspace Members ({workspaceMembers.length})
         </h3>
 
-        {presence.workspaceSlug !== workspaceSlug ? (
-          <p>Waiting for presence snapshot...</p>
-        ) : onlineUserIds.length === 0 ? (
-          <p>No users currently reported online.</p>
+        {directory.workspaceSlug !== workspaceSlug ? (
+          <p>Loading workspace members...</p>
+        ) : directory.error ? (
+          <p role="alert">
+            Unable to load members: {directory.error}
+          </p>
         ) : (
-          <ul>
-            {onlineUserIds.map((userId) => (
-              <li key={userId}>
-                🟢 {userId}
-              </li>
-            ))}
-          </ul>
+          <>
+            {!presenceReady && (
+              <p>Connecting to live presence...</p>
+            )}
+
+            <ul>
+              {workspaceMembers.map((member) => {
+                const isOnline =
+                  presenceReady &&
+                  onlineUserSet.has(
+                    String(member.user.id)
+                  );
+
+                return (
+                  <li key={member.user.id}>
+                    <span aria-hidden="true">
+                      {presenceReady
+                        ? isOnline
+                          ? "🟢"
+                          : "⚪"
+                        : "⏳"}
+                    </span>
+
+                    {" "}
+                    <strong>
+                      {member.user.name}
+                    </strong>
+
+                    {" — "}
+                    {member.role.toUpperCase()}
+
+                    {" · "}
+
+                    {!presenceReady
+                      ? "Checking..."
+                      : isOnline
+                        ? "Online"
+                        : "Offline"}
+                  </li>
+                );
+              })}
+            </ul>
+          </>
         )}
       </section>
+
 
       <Outlet />
     </>

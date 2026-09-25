@@ -1,5 +1,7 @@
+import { asyncHandler } from "../utils/asyncHandler.js";
 import {
     getWorkspaceMembers,
+    listWorkspacePresenceDirectory,
 } from "../services/workspace.service.js";
 
 export function getWorkspaceContext(req, res) {
@@ -28,3 +30,18 @@ export async function listWorkspaceMembers(req, res) {
         },
     });
 }
+
+export const getWorkspacePresenceDirectoryController =
+    asyncHandler(async (req, res) => {
+        const members =
+            await listWorkspacePresenceDirectory(
+                req.tenantContext.tenantId
+            );
+
+        res.status(200).json({
+            success: true,
+            data: {
+                members,
+            },
+        });
+    });
