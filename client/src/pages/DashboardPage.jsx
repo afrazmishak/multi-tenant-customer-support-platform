@@ -11,6 +11,7 @@ import {
 import { getWorkspaceContextRequest } from "../api/workspaceApi.js";
 import { useAuth } from "../auth/useAuth.js";
 import FullPageLoader from "../components/FullPageLoader.jsx";
+import WorkspacePresencePanel from "../components/WorkspacePresencePanel.jsx";
 
 export default function DashboardPage() {
     const { workspaceSlug } = useParams();
@@ -217,6 +218,8 @@ export default function DashboardPage() {
                         <strong>Foundation active</strong>
                     </article>
                 </section>
+
+                <WorkspacePresencePanel />
 
                 <section className="dashboard-panel">
                     <h2>Phase 1 foundation</h2>

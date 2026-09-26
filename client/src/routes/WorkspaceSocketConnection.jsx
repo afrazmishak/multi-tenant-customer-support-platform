@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useParams } from "react-router";
-
 import { socket } from "../socket/socket.js";
+import { WorkspacePresenceContext, } from "../context/WorkspacePresenceContext.js";
 
 export default function WorkspaceSocketConnection() {
   const { workspaceSlug } = useParams();
@@ -18,23 +18,6 @@ export default function WorkspaceSocketConnection() {
     members: [],
     error: null
   });
-
-  const onlineUserIds =
-    presence.workspaceSlug === workspaceSlug
-      ? presence.userIds
-      : [];
-
-
-  const onlineUserSet = new Set(onlineUserIds);
-
-  const workspaceMembers =
-    directory.workspaceSlug === workspaceSlug
-      ? directory.members
-      : [];
-
-  const presenceReady =
-    presence.workspaceSlug === workspaceSlug;
-
 
   useEffect(() => {
     if (!workspaceSlug) {
@@ -331,71 +314,59 @@ export default function WorkspaceSocketConnection() {
     };
   }, [workspaceSlug]);
 
+  const presenceReady =
+    presence.workspaceSlug === workspaceSlug;
+
+  const directoryLoading =
+    directory.workspaceSlug !== workspaceSlug;
+
+  const workspaceMembers =
+    directoryLoading
+      ? []
+      : directory.members;
+
+  const onlineUserIds =
+    presenceReady
+      ? presence.userIds
+      : [];
+
+  const onlineUserSet =
+    new Set(onlineUserIds);
+
+  const membersWithPresence =
+    workspaceMembers.map((member) => ({
+      ...member,
+
+      isOnline:
+        presenceReady &&
+        onlineUserSet.has(
+          String(member.user.id)
+        ),
+    }));
+
+  const onlineCount = presenceReady
+    ? membersWithPresence.filter(
+      (member) => member.isOnline
+    ).length
+    : 0;
+
+  const workspacePresenceValue = {
+    workspaceSlug,
+    members: membersWithPresence,
+    onlineCount,
+    presenceReady,
+    directoryLoading,
+
+    directoryError: directoryLoading
+      ? null
+      : directory.error,
+  };
 
   return (
-    <>
-
-      <section>
-        <h3>
-          Workspace Members ({workspaceMembers.length})
-        </h3>
-
-        {directory.workspaceSlug !== workspaceSlug ? (
-          <p>Loading workspace members...</p>
-        ) : directory.error ? (
-          <p role="alert">
-            Unable to load members: {directory.error}
-          </p>
-        ) : (
-          <>
-            {!presenceReady && (
-              <p>Connecting to live presence...</p>
-            )}
-
-            <ul>
-              {workspaceMembers.map((member) => {
-                const isOnline =
-                  presenceReady &&
-                  onlineUserSet.has(
-                    String(member.user.id)
-                  );
-
-                return (
-                  <li key={member.user.id}>
-                    <span aria-hidden="true">
-                      {presenceReady
-                        ? isOnline
-                          ? "🟢"
-                          : "⚪"
-                        : "⏳"}
-                    </span>
-
-                    {" "}
-                    <strong>
-                      {member.user.name}
-                    </strong>
-
-                    {" — "}
-                    {member.role.toUpperCase()}
-
-                    {" · "}
-
-                    {!presenceReady
-                      ? "Checking..."
-                      : isOnline
-                        ? "Online"
-                        : "Offline"}
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
-      </section>
-
-
+    <WorkspacePresenceContext.Provider
+      value={workspacePresenceValue}
+    >
       <Outlet />
-    </>
+    </WorkspacePresenceContext.Provider>
   );
-
 }
