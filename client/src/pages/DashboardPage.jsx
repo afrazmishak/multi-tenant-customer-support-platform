@@ -12,6 +12,7 @@ import { getWorkspaceContextRequest } from "../api/workspaceApi.js";
 import { useAuth } from "../auth/useAuth.js";
 import FullPageLoader from "../components/FullPageLoader.jsx";
 import WorkspacePresencePanel from "../components/WorkspacePresencePanel.jsx";
+import TicketInboxPreview from "../components/TicketInboxPreview.jsx";
 
 export default function DashboardPage() {
     const { workspaceSlug } = useParams();
@@ -220,6 +221,10 @@ export default function DashboardPage() {
                 </section>
 
                 <WorkspacePresencePanel />
+
+                <TicketInboxPreview
+                    workspaceSlug={workspaceSlug}
+                />
 
                 <section className="dashboard-panel">
                     <h2>Phase 1 foundation</h2>
