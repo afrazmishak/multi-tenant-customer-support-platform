@@ -1,0 +1,183 @@
+
+.ticket-inbox {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ticket-inbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.ticket-inbox-header h2 {
+    margin: 4px 0;
+}
+
+.ticket-inbox-description {
+    margin: 0;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.ticket-count {
+    background: #eef2ff;
+    color: #3730a3;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ticket-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+}
+
+.ticket-item {
+    padding: 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.ticket-item-top,
+.ticket-item-meta,
+.ticket-assignment {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ticket-reference {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.ticket-subject {
+    margin: 12px 0;
+    font-size: 16px;
+    color: #0f172a;
+}
+
+.ticket-item-meta {
+    color: #64748b;
+    font-size: 12px;
+    padding-bottom: 14px;
+}
+
+.ticket-status,
+.ticket-priority {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.ticket-status {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.ticket-status[data-status="open"] {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.ticket-status[data-status="in_progress"] {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.ticket-status[data-status="resolved"] {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.ticket-status[data-status="closed"] {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.ticket-priority {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.ticket-priority[data-priority="high"],
+.ticket-priority[data-priority="urgent"] {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.ticket-priority[data-priority="normal"] {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.ticket-priority[data-priority="low"] {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.ticket-assignment {
+    justify-content: flex-start;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 14px;
+    font-size: 13px;
+}
+
+.ticket-assignment-label {
+    color: #64748b;
+}
+
+.ticket-agent-online {
+    color: #15803d;
+    font-size: 12px;
+}
+
+.ticket-agent-offline {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.ticket-empty-state {
+    text-align: center;
+    padding: 32px 16px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+}
+
+.ticket-empty-state h3 {
+    margin: 0 0 8px;
+}
+
+.ticket-empty-state p {
+    margin: 0;
+    color: #64748b;
+}
+
+@media (max-width: 640px) {
+    .ticket-inbox-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .ticket-item {
+        padding: 14px;
+    }
+}
