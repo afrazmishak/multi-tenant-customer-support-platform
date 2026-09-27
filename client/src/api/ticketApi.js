@@ -25,3 +25,31 @@ export async function getWorkspaceTicketsRequest(
 
     return result;
 }
+
+export async function getTicketByIdRequest(
+    workspaceSlug,
+    ticketId,
+    { signal } = {}
+) {
+    const url =
+        `${API_BASE_URL}/api/workspaces/` +
+        `${encodeURIComponent(workspaceSlug)}/tickets/` +
+        `${encodeURIComponent(ticketId)}`;
+
+    const response = await FileSystemDirectoryHandle(url, {
+        method: "GET",
+        credentials: "include",
+        signal,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result?.message ||
+            `Unable to load ticket (${response.status})`
+        );
+    }
+
+    return result;
+}
