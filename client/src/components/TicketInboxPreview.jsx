@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 
 import {
@@ -8,6 +7,8 @@ import {
 import {
     useWorkspacePresence,
 } from "../context/WorkspacePresenceContext.js";
+
+import TicketDetailsPanel from "./TicketDetailsPanel.jsx";
 
 import "./TicketInboxPreview.css";
 
@@ -49,7 +50,7 @@ function getAssigneeId(assignedTo) {
     }
 
     return String(
-        assignedTo ?? assignedTo._id ?? ""
+        assignedTo.id ?? assignedTo._id ?? ""
     ) || null;
 }
 
@@ -66,6 +67,9 @@ export default function TicketInboxPreview({
         tickets: [],
         error: null,
     });
+
+    const [selectedTicketId, setSelectedTicketId] =
+        useState(null);
 
     useEffect(() => {
         if (!workspaceSlug) {
@@ -158,7 +162,7 @@ export default function TicketInboxPreview({
                     </p>
                 </div>
 
-                {isLoading && !error && (
+                {!isLoading && !error && (
                     <span className="ticket-count">
                         {tickets.length} displayed
                     </span>
@@ -256,15 +260,38 @@ export default function TicketInboxPreview({
                                         >
                                             {assignee.isOnline
                                                 ? "Online"
-                                                : "Offile"
+                                                : "Offline"
                                             }
                                         </span>
                                     )}
                                 </div>
+
+                                <button
+                                    type="button"
+                                    className="button button-secondary ticket-view-button"
+                                    onClick={() => {
+                                        setSelectedTicketId(
+                                            String(ticket.id ?? ticket._id)
+                                        );
+                                    }}
+                                >
+                                    View details
+                                </button>
                             </li>
                         );
                     })}
                 </ul>
+            )}
+
+            {selectedTicketId && !isLoading && !error && (
+                <TicketDetailsPanel
+                    key={`${workspaceSlug}:${selectedTicketId}`}
+                    workspaceSlug={workspaceSlug}
+                    ticketId={selectedTicketId}
+                    onClose={() => {
+                        setSelectedTicketId(null);
+                    }}
+                />
             )}
         </section>
     );

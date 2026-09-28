@@ -59,7 +59,7 @@ export default function TicketDetailsPanel({
         const controller = new AbortController();
         let cancelled = false;
 
-        async function loadTicket() {c
+        async function loadTicket() {
             try {
                 const result = await getTicketByIdRequest(
                     workspaceSlug,
@@ -98,7 +98,7 @@ export default function TicketDetailsPanel({
             }
         }
 
-        loadTickets();
+        loadTicket();
 
         return () => {
             cancelled = true;
