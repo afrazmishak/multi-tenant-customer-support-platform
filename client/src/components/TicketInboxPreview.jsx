@@ -266,6 +266,7 @@ export default function TicketInboxPreview({
                                     )}
                                 </div>
 
+
                                 <button
                                     type="button"
                                     className="button button-secondary ticket-view-button"
@@ -277,6 +278,7 @@ export default function TicketInboxPreview({
                                 >
                                     View details
                                 </button>
+
                             </li>
                         );
                     })}

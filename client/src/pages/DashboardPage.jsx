@@ -223,6 +223,7 @@ export default function DashboardPage() {
                 <WorkspacePresencePanel />
 
                 <TicketInboxPreview
+                    key={workspaceSlug}
                     workspaceSlug={workspaceSlug}
                 />
 

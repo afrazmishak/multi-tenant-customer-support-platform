@@ -1,0 +1,70 @@
+
+.ticket-details {
+    margin-top: 8px;
+    padding: 22px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+}
+
+.ticket-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.ticket-details-header h3 {
+    margin: 0;
+}
+
+.ticket-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.ticket-details-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.ticket-details-grid span {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.ticket-details-grid strong {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.ticket-description {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.ticket-description p {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+
+.ticket-view-button {
+    margin-top: 14px;
+}
+
+@media (max-width: 640px) {
+    .ticket-details-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ticket-details-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

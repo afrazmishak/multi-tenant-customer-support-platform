@@ -1,7 +1,15 @@
+
 import { useEffect, useState } from "react";
-import { getTicketByIdRequest, } from "../api/ticketApi.js";
-import { useWorkspacePresence } from "../context/WorkspacePresenceContext.js"
-import "./TicketInboxPreview.jsx";
+
+import {
+    getTicketByIdRequest,
+} from "../api/ticketApi.js";
+
+import {
+    useWorkspacePresence,
+} from "../context/WorkspacePresenceContext.js";
+
+import "./TicketDetailsPanel.css";
 
 function formatLabel(value) {
     if (!value) return "Not specified";
@@ -87,7 +95,7 @@ export default function TicketDetailsPanel({
                     cancelled ||
                     error.name === "AbortError"
                 ) {
-                    return
+                    return;
                 }
 
                 setDetailState({
@@ -106,7 +114,8 @@ export default function TicketDetailsPanel({
         };
     }, [workspaceSlug, ticketId]);
 
-    const isLoading = detailState.ticketId !== ticketId;
+    const isLoading =
+        detailState.ticketId !== ticketId;
 
     const ticket = isLoading
         ? null
@@ -126,26 +135,28 @@ export default function TicketDetailsPanel({
     );
 
     const customer =
-        ticket?.ticket.customer &&
-            typeof ticket.customer === "object"
+        ticket?.customer &&
+        typeof ticket.customer === "object"
             ? ticket.customer.name ??
-            getEntityId(ticket.customer)
+              getEntityId(ticket.customer)
             : ticket?.customer ?? "Not specified";
 
     return (
-        <section className="ticket-details" aria-label="Ticket details">
+        <section
+            className="ticket-details"
+            aria-label="Ticket details"
+        >
             <header className="ticket-details-header">
                 <h3>Ticket Details</h3>
 
                 <button
                     type="button"
-                    className="button"
+                    className="button button-secondary"
                     onClick={onClose}
                 >
                     Close details
                 </button>
             </header>
-
 
             {isLoading ? (
                 <p>Loading ticket details...</p>
@@ -183,8 +194,7 @@ export default function TicketDetailsPanel({
                                 {!assigneeId
                                     ? "Unassigned"
                                     : assignee?.user.name ??
-                                    "Assigned member unavailable"
-                                }
+                                      "Assigned member unavailable"}
                             </strong>
                         </div>
 
@@ -222,7 +232,9 @@ export default function TicketDetailsPanel({
                             <div>
                                 <h4>Tags</h4>
 
-                                <p>{ticket.tags.join(", ")}</p>
+                                <p>
+                                    {ticket.tags.join(", ")}
+                                </p>
                             </div>
                         )}
                 </>

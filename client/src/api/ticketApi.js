@@ -26,6 +26,7 @@ export async function getWorkspaceTicketsRequest(
     return result;
 }
 
+
 export async function getTicketByIdRequest(
     workspaceSlug,
     ticketId,
@@ -36,7 +37,7 @@ export async function getTicketByIdRequest(
         `${encodeURIComponent(workspaceSlug)}/tickets/` +
         `${encodeURIComponent(ticketId)}`;
 
-    const response = await FileSystemDirectoryHandle(url, {
+    const response = await fetch(url, {
         method: "GET",
         credentials: "include",
         signal,
