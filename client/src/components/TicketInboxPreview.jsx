@@ -68,8 +68,29 @@ export default function TicketInboxPreview({
         error: null,
     });
 
-    const [selectedTicketId, setSelectedTicketId] =
-        useState(null);
+    const [openTicketIds, setOpenTicketIds] =
+        useState([]);
+
+    function openTicket(ticketId) {
+        setOpenTicketIds((previous) => {
+            if (previous.includes(ticketId)) {
+                return previous;
+            }
+
+            return [
+                ...previous,
+                ticketId,
+            ];
+        });
+    }
+
+    function closeTicket(ticketId) {
+        setOpenTicketIds((previous) =>
+            previous.filter(
+                (id) => id !== ticketId
+            )
+        );
+    }
 
     useEffect(() => {
         if (!workspaceSlug) {
@@ -186,6 +207,12 @@ export default function TicketInboxPreview({
             ) : (
                 <ul className="ticket-list">
                     {tickets.map((ticket) => {
+                        const ticketId =
+                            String(ticket.id ?? ticket._id);
+
+                        const isOpen =
+                            openTicketIds.includes(ticketId);
+
                         const assignedId =
                             getAssigneeId(ticket.assignedTo);
 
@@ -271,29 +298,31 @@ export default function TicketInboxPreview({
                                     type="button"
                                     className="button button-secondary ticket-view-button"
                                     onClick={() => {
-                                        setSelectedTicketId(
-                                            String(ticket.id ?? ticket._id)
-                                        );
+                                        openTicket(ticketId);
                                     }}
+                                    disabled={isOpen}
                                 >
-                                    View details
+                                    {isOpen
+                                        ? "Details open"
+                                        : "View details"
+                                    }
                                 </button>
+
+                                {isOpen && (
+                                    <TicketDetailsPanel
+                                        key={`${workspaceSlug}:${ticketId}`}
+                                        workspaceSlug={workspaceSlug}
+                                        ticketId={ticketId}
+                                        onClose={() => {
+                                            closeTicket(ticketId);
+                                        }}
+                                    />
+                                )}
 
                             </li>
                         );
                     })}
                 </ul>
-            )}
-
-            {selectedTicketId && !isLoading && !error && (
-                <TicketDetailsPanel
-                    key={`${workspaceSlug}:${selectedTicketId}`}
-                    workspaceSlug={workspaceSlug}
-                    ticketId={selectedTicketId}
-                    onClose={() => {
-                        setSelectedTicketId(null);
-                    }}
-                />
             )}
         </section>
     );
