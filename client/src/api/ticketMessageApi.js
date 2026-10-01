@@ -27,3 +27,43 @@ export async function getTicketMessagesRequest(
 
     return result;
 }
+
+export async function createTicketMessageRequest(
+    workspaceSlug,
+    ticketId,
+    {
+        type,
+        body,
+    }
+) {
+    const url =
+        `${API_BASE_URL}/api/workspaces/` +
+        `${encodeURIComponent(workspaceSlug)}/tickets/` +
+        `${encodeURIComponent(ticketId)}//messages`;
+
+    const response = await fetch(url, {
+        method: "POST",
+
+        header: {
+            "Content-Type": "application/json",
+        },
+
+        credentials: "include",
+
+        body: JSON.stringify({
+            type,
+            body,
+        }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result?.message ||
+            `Unable to create message (${response.status})`
+        );
+    }
+
+    return result;
+}
