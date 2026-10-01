@@ -5,9 +5,9 @@ export async function getTicketMessagesRequest(
     ticketId,
     { signal } = {}
 ) {
-    const url = 
-        `${API_BASE_URL}/api/workspaces` +
-        `${encodeURIComponent(workspaceSlug)}/tickets` +
+    const url =
+        `${API_BASE_URL}/api/workspaces/` +
+        `${encodeURIComponent(workspaceSlug)}/tickets/` +
         `${encodeURIComponent(ticketId)}/messages`;
 
     const response = await fetch(url, {

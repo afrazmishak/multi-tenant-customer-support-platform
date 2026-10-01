@@ -1,0 +1,120 @@
+.ticket-message-timeline {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.ticket-message-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.ticket-message-header h4 {
+    margin: 0 0 5px;
+}
+
+.ticket-message-header p {
+    margin: 0;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.ticket-message-count {
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ticket-message-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ticket-message {
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.ticket-message-public {
+    background: #ffffff;
+}
+
+.ticket-message-internal {
+    background: #fffbeb;
+    border-color: #fde68a;
+}
+
+.ticket-message-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.ticket-message-meta time {
+    margin-left: auto;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.message-type {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.message-type-public {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.message-type-internal {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.ticket-message-body {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+
+.ticket-message-empty {
+    padding: 20px;
+    text-align: center;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+}
+
+.ticket-message-empty p {
+    margin: 6px 0 0;
+    color: #64748b;
+}
+
+@media (max-width: 640px) {
+    .ticket-message-header {
+        flex-direction: column;
+    }
+
+    .ticket-message-meta time {
+        width: 100%;
+        margin-left: 0;
+    }
+}

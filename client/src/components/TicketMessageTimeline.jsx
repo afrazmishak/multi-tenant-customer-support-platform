@@ -1,7 +1,17 @@
-import { useEffect, useState } from "react";
-import { getTicketMessagesRequest, } from "../api/ticketMessageApi.js"
-import { useWorkspacePresence, } from "../context/WorkspacePresenceContext.js"
-import "./TicketMessageTimeline.css"
+import {
+    useEffect,
+    useState,
+} from "react";
+
+import {
+    getTicketMessagesRequest,
+} from "../api/ticketMessageApi.js";
+
+import {
+    useWorkspacePresence,
+} from "../context/WorkspacePresenceContext.js";
+
+import "./TicketMessageTimeline.css";
 
 function formatDateTime(value) {
     if (!value) {
@@ -14,7 +24,7 @@ function formatDateTime(value) {
         return "Date unavailable";
     }
 
-    return new Intl.formatDateTime("en", {
+    return new Intl.DateTimeFormat("en", {
         dateStyle: "medium",
         timeStyle: "short",
     }).format(date);
@@ -31,7 +41,7 @@ function getEntityId(value) {
 
     return String(
         value.id ?? value._id ?? ""
-    ) || null;;
+    ) || null;
 }
 
 export default function TicketMessageTimeline({
@@ -55,21 +65,25 @@ export default function TicketMessageTimeline({
             return;
         }
 
-        const controller = new AbortController();
+        const controller =
+            new AbortController();
 
         let cancelled = false;
 
         async function loadMessages() {
             try {
-                const result = await getTicketMessagesRequest(
-                    workspaceSlug,
-                    ticketId,
-                    {
-                        signal: controller.signal,
-                    }
-                );
+                const result =
+                    await getTicketMessagesRequest(
+                        workspaceSlug,
+                        ticketId,
+                        {
+                            signal:
+                                controller.signal,
+                        }
+                    );
 
-                const messages = result?.data?.messages;
+                const messages =
+                    result?.data?.messages;
 
                 if (!Array.isArray(messages)) {
                     throw new Error(
@@ -109,7 +123,8 @@ export default function TicketMessageTimeline({
         };
     }, [workspaceSlug, ticketId]);
 
-    const isLoading = messageState.ticketId !== ticketId;
+    const isLoading =
+        messageState.ticketId !== ticketId;
 
     const messages = isLoading
         ? []
@@ -120,7 +135,7 @@ export default function TicketMessageTimeline({
         : messageState.error;
 
     const memberMap = new Map(
-        members.Map((member) => [
+        members.map((member) => [
             String(member.user.id),
             member,
         ])
@@ -133,7 +148,8 @@ export default function TicketMessageTimeline({
                     <h4>Conversation</h4>
 
                     <p>
-                        Public replies and internal support notes for this ticket.
+                        Public replies and internal
+                        support notes for this ticket.
                     </p>
                 </div>
 
@@ -147,26 +163,28 @@ export default function TicketMessageTimeline({
             {isLoading ? (
                 <p>Loading conversation...</p>
             ) : error ? (
-                <p className="alert">
-                    Unable to load conversation:{" "} {error}
+                <p role="alert">
+                    Unable to load conversation:{" "}
+                    {error}
                 </p>
             ) : messages.length === 0 ? (
-
                 <div className="ticket-message-empty">
                     <strong>
                         No messages yet
                     </strong>
 
                     <p>
-                        This ticket does not have any conversation history yet.
+                        This ticket does not have any
+                        conversation history yet.
                     </p>
                 </div>
             ) : (
                 <ol className="ticket-message-list">
                     {messages.map((message) => {
-                        const authorId = getEntityId(
-                            message.authorUser
-                        );
+                        const authorId =
+                            getEntityId(
+                                message.authorUser
+                            );
 
                         const author =
                             authorId
@@ -175,7 +193,8 @@ export default function TicketMessageTimeline({
                                 )
                                 : null;
 
-                        const authorName = author?.user?.name ??
+                        const authorName =
+                            author?.user?.name ??
                             (
                                 directoryLoading
                                     ? "Loading author..."
@@ -184,7 +203,8 @@ export default function TicketMessageTimeline({
 
                         const isInternal =
                             message.isInternal === true ||
-                            message.type === "internal_note";
+                            message.type ===
+                            "internal_note";
 
                         return (
                             <li
@@ -192,7 +212,6 @@ export default function TicketMessageTimeline({
                                     message.id ??
                                     message._id
                                 }
-
                                 className={
                                     isInternal
                                         ? "ticket-message ticket-message-internal"
@@ -213,8 +232,7 @@ export default function TicketMessageTimeline({
                                     >
                                         {isInternal
                                             ? "Internal note"
-                                            : "Public reply"
-                                        }
+                                            : "Public reply"}
                                     </span>
 
                                     <time>
@@ -233,5 +251,5 @@ export default function TicketMessageTimeline({
                 </ol>
             )}
         </section>
-    )
+    );
 }

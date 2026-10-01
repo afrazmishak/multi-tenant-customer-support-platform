@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 
 import {
@@ -8,6 +7,8 @@ import {
 import {
     useWorkspacePresence,
 } from "../context/WorkspacePresenceContext.js";
+
+import TicketMessageTimeline from "./TicketMessageTimeline.jsx";
 
 import "./TicketDetailsPanel.css";
 
@@ -136,9 +137,9 @@ export default function TicketDetailsPanel({
 
     const customer =
         ticket?.customer &&
-        typeof ticket.customer === "object"
+            typeof ticket.customer === "object"
             ? ticket.customer.name ??
-              getEntityId(ticket.customer)
+            getEntityId(ticket.customer)
             : ticket?.customer ?? "Not specified";
 
     return (
@@ -194,7 +195,7 @@ export default function TicketDetailsPanel({
                                 {!assigneeId
                                     ? "Unassigned"
                                     : assignee?.user.name ??
-                                      "Assigned member unavailable"}
+                                    "Assigned member unavailable"}
                             </strong>
                         </div>
 
@@ -237,6 +238,11 @@ export default function TicketDetailsPanel({
                                 </p>
                             </div>
                         )}
+
+                    <TicketMessageTimeline
+                        workspaceSlug={workspaceSlug}
+                        ticketId={ticketId}
+                    />
                 </>
             ) : null}
         </section>
