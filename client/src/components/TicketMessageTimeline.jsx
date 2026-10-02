@@ -11,6 +11,8 @@ import {
     useWorkspacePresence,
 } from "../context/WorkspacePresenceContext.js";
 
+import TicketMessageComposer from "./TicketMessageComposer.jsx";
+
 import "./TicketMessageTimeline.css";
 
 function formatDateTime(value) {
@@ -47,6 +49,7 @@ function getEntityId(value) {
 export default function TicketMessageTimeline({
     workspaceSlug,
     ticketId,
+    ticketStatus,
 }) {
     const {
         members,
@@ -59,6 +62,46 @@ export default function TicketMessageTimeline({
             messages: [],
             error: null,
         });
+
+    function handleMessageCreated(createdMessage) {
+        setMessageState((previous) => {
+            if (
+                previous.ticketId !== ticketId
+            ) {
+                return previous;
+            }
+
+            const createdMessageId =
+                String(
+                    createdMessage.id ??
+                    createdMessage._id ??
+                    ""
+                );
+
+            const alreadyExists =
+                previous.messages.some(
+                    (message) =>
+                        String(
+                            message.id ??
+                            message._id
+                        ) ===
+                        createdMessageId
+                );
+
+            if (alreadyExists) {
+                return previous;
+            }
+
+            return {
+                ...previous,
+
+                messages: [
+                    ...previous.messages,
+                    createdMessage,
+                ],
+            };
+        });
+    }
 
     useEffect(() => {
         if (!workspaceSlug || !ticketId) {
@@ -250,6 +293,13 @@ export default function TicketMessageTimeline({
                     })}
                 </ol>
             )}
+
+            <TicketMessageComposer
+                workspaceSlug={workspaceSlug}
+                ticketId={ticketId}
+                ticketStatus={ticketStatus}
+                onMessageCreated={handleMessageCreated}
+            />
         </section>
     );
 }

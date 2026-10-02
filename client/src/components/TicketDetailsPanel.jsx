@@ -242,6 +242,7 @@ export default function TicketDetailsPanel({
                     <TicketMessageTimeline
                         workspaceSlug={workspaceSlug}
                         ticketId={ticketId}
+                        ticketStatus={ticket.status}
                     />
                 </>
             ) : null}
