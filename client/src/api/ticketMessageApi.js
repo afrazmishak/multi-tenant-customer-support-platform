@@ -39,12 +39,12 @@ export async function createTicketMessageRequest(
     const url =
         `${API_BASE_URL}/api/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/tickets/` +
-        `${encodeURIComponent(ticketId)}//messages`;
+        `${encodeURIComponent(ticketId)}/messages`;
 
     const response = await fetch(url, {
         method: "POST",
 
-        header: {
+        headers: {
             "Content-Type": "application/json",
         },
 
