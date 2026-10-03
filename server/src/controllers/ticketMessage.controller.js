@@ -1,5 +1,6 @@
 import AppError from "../utils/AppError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { emitTicketMessageCreated, } from "../socket/ticketRealtime.js";
 
 import {
     createTicketMessage,
@@ -89,11 +90,18 @@ export const createTicketMessageController =
                 input: req.body,
             });
 
+        try {
             emitTicketMessageCreated({
                 workspaceId,
                 ticketId,
-                message,
+                message, c
             });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:message:created",
+                error
+            );
+        }
 
         const responseMessage =
             message.isInternal
@@ -188,12 +196,12 @@ export const updateTicketMessageController =
                 input: req.body,
             });
 
-            //Persist first, publish second
-            emitTicketMessageUpdated({
-                workspaceId,
-                ticketId,
-                message,
-            });
+        //Persist first, publish second
+        emitTicketMessageUpdated({
+            workspaceId,
+            ticketId,
+            message,
+        });
 
         res.status(200).json({
             success: true,
