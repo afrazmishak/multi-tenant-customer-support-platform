@@ -17,6 +17,15 @@ export function emitTicketMessageCreated({
         ticketId
     );
 
+    console.log(
+        "[ticket:message:created emit]",
+        {
+            workspaceId,
+            ticketId,
+            room: ticketRoom,
+        }
+    );
+
     io.to(ticketRoom).emit(
         "ticket:message:created",
         {

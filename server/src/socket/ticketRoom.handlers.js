@@ -40,7 +40,16 @@ export function registerTicketRoomHandlers(socket) {
           ticketId
         );
 
-        await socket.join(ticketRoom);
+        console.log(
+          "[ticket:join]",
+          {
+            tenantId,
+            ticketId,
+            room: ticketRoom,
+          }
+        );
+
+        socket.join(ticketRoom);
 
         console.log(
           `Socket ${socket.id} joined ticket room ${ticketRoom}`

@@ -1,6 +1,5 @@
 import AppError from "../utils/AppError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { emitTicketMessageCreated, } from "../socket/ticketRealtime.js";
 
 import {
     createTicketMessage,
@@ -94,7 +93,7 @@ export const createTicketMessageController =
             emitTicketMessageCreated({
                 workspaceId,
                 ticketId,
-                message, c
+                message,
             });
         } catch (error) {
             console.error(

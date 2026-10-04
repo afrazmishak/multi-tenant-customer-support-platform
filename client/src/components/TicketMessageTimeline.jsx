@@ -1,7 +1,12 @@
 import {
+    useCallback,
     useEffect,
     useState,
 } from "react";
+
+import {
+    socket,
+} from "../socket/socket.js";
 
 import {
     getTicketMessagesRequest,
@@ -63,45 +68,54 @@ export default function TicketMessageTimeline({
             error: null,
         });
 
-    function handleMessageCreated(createdMessage) {
-        setMessageState((previous) => {
-            if (
-                previous.ticketId !== ticketId
-            ) {
-                return previous;
-            }
+    const handleMessageCreated =
+        useCallback(
+            (createdMessage) => {
+                if (!createdMessage) {
+                    return;
+                }
 
-            const createdMessageId =
-                String(
-                    createdMessage.id ??
-                    createdMessage._id ??
-                    ""
-                );
+                setMessageState((previous) => {
+                    if (
+                        previous.ticketId !== ticketId
+                    ) {
+                        return previous;
+                    }
 
-            const alreadyExists =
-                previous.messages.some(
-                    (message) =>
+                    const createdMessageId =
                         String(
-                            message.id ??
-                            message._id
-                        ) ===
-                        createdMessageId
-                );
+                            createdMessage.id ??
+                            createdMessage._id ??
+                            ""
+                        );
 
-            if (alreadyExists) {
-                return previous;
-            }
+                    const alreadyExists =
+                        previous.messages.some(
+                            (message) =>
+                                String(
+                                    message.id ??
+                                    message._id ??
+                                    ""
+                                ) ===
+                                createdMessageId
+                        );
 
-            return {
-                ...previous,
+                    if (alreadyExists) {
+                        return previous;
+                    }
 
-                messages: [
-                    ...previous.messages,
-                    createdMessage,
-                ],
-            };
-        });
-    }
+                    return {
+                        ...previous,
+
+                        messages: [
+                            ...previous.messages,
+                            createdMessage,
+                        ],
+                    };
+                });
+            },
+            [ticketId]
+        );
 
     useEffect(() => {
         if (!workspaceSlug || !ticketId) {
@@ -166,6 +180,94 @@ export default function TicketMessageTimeline({
         };
     }, [workspaceSlug, ticketId]);
 
+    useEffect(() => {
+        if (!ticketId) {
+            return;
+        }
+
+        function joinTicketRoom() {
+            socket.emit(
+                "ticket:join",
+                {
+                    ticketId,
+                },
+                (response) => {
+                    if (!response?.success) {
+                        console.error(
+                            "Unable to join ticket room",
+                            response
+                        );
+                    }
+                }
+            );
+        }
+
+        function handleRealtimeMessageCreated(
+            payload
+        ) {
+            console.log(
+                "[ticket:message:created received]",
+                payload
+            );
+            if (!payload) {
+                return;
+            }
+
+            if (
+                String(payload.ticketId) !==
+                String(ticketId)
+            ) {
+                return;
+            }
+
+            if (!payload.message) {
+                return;
+            }
+
+            handleMessageCreated(
+                payload.message
+            );
+        }
+
+        if (socket.connected) {
+            joinTicketRoom();
+        }
+
+        socket.on(
+            "connect",
+            joinTicketRoom
+        );
+
+        socket.on(
+            "ticket:message:created",
+            handleRealtimeMessageCreated
+        );
+
+        return () => {
+            socket.off(
+                "connect",
+                joinTicketRoom
+            );
+
+            socket.off(
+                "ticket:message:created",
+                handleRealtimeMessageCreated
+            );
+
+            if (socket.connected) {
+                socket.emit(
+                    "ticket:leave",
+                    {
+                        ticketId,
+                    }
+                );
+            }
+        };
+    }, [
+        ticketId,
+        handleMessageCreated,
+    ]);
+
     const isLoading =
         messageState.ticketId !== ticketId;
 
@@ -183,6 +285,8 @@ export default function TicketMessageTimeline({
             member,
         ])
     );
+
+
 
     return (
         <section className="ticket-message-timeline">
