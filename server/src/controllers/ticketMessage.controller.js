@@ -196,11 +196,18 @@ export const updateTicketMessageController =
             });
 
         //Persist first, publish second
-        emitTicketMessageUpdated({
-            workspaceId,
-            ticketId,
-            message,
-        });
+        try {
+            emitTicketMessageUpdated({
+                workspaceId,
+                ticketId,
+                message,
+            });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:message:updated",
+                error
+            );
+        }
 
         res.status(200).json({
             success: true,

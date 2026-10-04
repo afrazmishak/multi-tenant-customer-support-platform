@@ -117,6 +117,56 @@ export default function TicketMessageTimeline({
             [ticketId]
         );
 
+    const handleMessageUpdated =
+        useCallback(
+            (updatedMessage) => {
+                if (!updatedMessage) {
+                    return;
+                }
+
+                const updatedMessageId =
+                    String(
+                        updatedMessage.id ??
+                        updatedMessage._id ??
+                        ""
+                    );
+
+                if (!updatedMessageId) {
+                    return;
+                }
+
+                setMessageState((previous) => {
+                    if (
+                        previous.ticketId !== ticketId
+                    ) {
+                        return previous;
+                    }
+
+                    return {
+                        ...previous,
+
+                        messages:
+                            previous.messages.map(
+                                (message) => {
+                                    const messageId =
+                                        String(
+                                            message.id ??
+                                            message._id ??
+                                            ""
+                                        );
+
+                                    return messageId ===
+                                        updatedMessageId
+                                        ? updatedMessage
+                                        : message;
+                                }
+                            ),
+                    }
+                });
+            },
+            [ticketId]
+        );
+
     useEffect(() => {
         if (!workspaceSlug || !ticketId) {
             return;
@@ -229,6 +279,29 @@ export default function TicketMessageTimeline({
             );
         }
 
+        function handleRealtimeMessageUpdated(
+            payload
+        ) {
+            if (!payload) {
+                return;
+            }
+
+            if (
+                String(payload.ticketId) !==
+                String(ticketId)
+            ) {
+                return;
+            }
+
+            if (!payload.message) {
+                return;
+            }
+
+            handleMessageUpdated(
+                payload.message
+            );
+        }
+
         if (socket.connected) {
             joinTicketRoom();
         }
@@ -243,6 +316,11 @@ export default function TicketMessageTimeline({
             handleRealtimeMessageCreated
         );
 
+        socket.on(
+            "ticket:message:updated",
+            handleRealtimeMessageUpdated
+        )
+
         return () => {
             socket.off(
                 "connect",
@@ -252,6 +330,11 @@ export default function TicketMessageTimeline({
             socket.off(
                 "ticket:message:created",
                 handleRealtimeMessageCreated
+            );
+
+            socket.off(
+                "ticket:message:updated",
+                handleRealtimeMessageUpdated
             );
 
             if (socket.connected) {
@@ -266,6 +349,7 @@ export default function TicketMessageTimeline({
     }, [
         ticketId,
         handleMessageCreated,
+        handleMessageUpdated,
     ]);
 
     const isLoading =
