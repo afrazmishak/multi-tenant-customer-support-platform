@@ -121,6 +121,9 @@ export const listTicketMessagesController =
         const workspaceId =
             getWorkspaceIdFromRequest(req);
 
+        const actorUserId = 
+            getAuthenticatedUserId(req);
+
         const ticketId =
             getTicketIdFromRequest(req);
 
@@ -134,6 +137,9 @@ export const listTicketMessagesController =
         res.status(200).json({
             success: true,
             data: {
+                currentUserId:
+                    String(actorUserId),
+                    
                 messages:
                     result.messages,
 

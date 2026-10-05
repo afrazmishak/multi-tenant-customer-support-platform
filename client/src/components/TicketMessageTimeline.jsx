@@ -65,6 +65,7 @@ export default function TicketMessageTimeline({
     const [messageState, setMessageState] =
         useState({
             ticketId: null,
+            currentUserId: null,
             messages: [],
             error: null,
         });
@@ -174,6 +175,20 @@ export default function TicketMessageTimeline({
         );
 
     function startEditingMessage(message) {
+        const authorId = 
+            getEntityId(
+                message.authorUser
+            );
+
+        if (
+            !currentUserId ||
+            !authorId ||
+            String(authorId) !==
+            String(currentUserId)
+        ) {
+            return;
+        }
+        
         const messageId =
             String(
                 message.id ??
@@ -266,6 +281,9 @@ export default function TicketMessageTimeline({
                 const messages =
                     result?.data?.messages;
 
+                const currentUserId =
+                    result?.data?.currentUserId;
+
                 if (!Array.isArray(messages)) {
                     throw new Error(
                         "Unexpected message API response: " +
@@ -276,6 +294,10 @@ export default function TicketMessageTimeline({
                 if (!cancelled) {
                     setMessageState({
                         ticketId,
+                        currentUserId:
+                            currentUserId
+                                ? String(currentUserId)
+                                : null,
                         messages,
                         error: null,
                     });
@@ -290,6 +312,7 @@ export default function TicketMessageTimeline({
 
                 setMessageState({
                     ticketId,
+                    currentUserId: null,
                     messages: [],
                     error: error.message,
                 });
@@ -433,6 +456,11 @@ export default function TicketMessageTimeline({
         ? []
         : messageState.messages;
 
+    const currentUserId =
+        isLoading
+            ? null
+            : messageState.currentUserId;
+
     const error = isLoading
         ? null
         : messageState.error;
@@ -518,7 +546,16 @@ export default function TicketMessageTimeline({
                                 ""
                             );
 
+                        const isOwnMessage =
+                            Boolean(
+                                currentUserId &&
+                                authorId &&
+                                String(currentUserId) ===
+                                String(authorId)
+                            );
+
                         const isEditing =
+                            isOwnMessage &&
                             editingMessageId === messageId;
 
                         return (
@@ -615,16 +652,18 @@ export default function TicketMessageTimeline({
                                             </small>
                                         )}
 
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                startEditingMessage(
-                                                    message
-                                                );
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
+                                        {isOwnMessage && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    startEditingMessage(
+                                                        message
+                                                    );
+                                                }}
+                                            >
+                                                Edit
+                                            </button>
+                                        )}
                                     </>
                                 )}
                             </li>
