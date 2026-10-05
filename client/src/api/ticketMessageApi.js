@@ -67,3 +67,43 @@ export async function createTicketMessageRequest(
 
     return result;
 }
+
+export async function updateTicketMessageRequest(
+    workspaceSlug,
+    ticketId,
+    messageId,
+    {
+        body,
+    }
+) {
+    const url =
+        `${API_BASE_URL}/api/workspaces/` +
+        `${encodeURIComponent(workspaceSlug)}/tickets/` +
+        `${encodeURIComponent(ticketId)}/messages/` +
+        `${encodeURIComponent(messageId)}`;
+
+    const response = await fetch(url, {
+        method: "PATCH",
+
+        headers: {
+            "Content-Type": "application/json",
+        },
+
+        credentials: "include",
+
+        body: JSON.stringify({
+            body,
+        }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result?.message ||
+            `Unable to update message (${response.status})`
+        );
+    }
+
+    return result;
+}
