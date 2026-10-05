@@ -10,6 +10,7 @@ import {
 
 import {
     getTicketMessagesRequest,
+    updateTicketMessageRequest,
 } from "../api/ticketMessageApi.js";
 
 import {
@@ -67,6 +68,11 @@ export default function TicketMessageTimeline({
             messages: [],
             error: null,
         });
+
+    const [editingMessageId, setEditingMessageId] = useState(null);
+    const [editBody, setEditBody] = useState("");
+    const [editError, setEditError] = useState(null);
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
 
     const handleMessageCreated =
         useCallback(
@@ -166,6 +172,74 @@ export default function TicketMessageTimeline({
             },
             [ticketId]
         );
+
+    function startEditingMessage(message) {
+        const messageId =
+            String(
+                message.id ??
+                message._id ??
+                ""
+            );
+
+        if (!messageId) {
+            return;
+        }
+
+        setEditingMessageId(messageId);
+        setEditBody(message.body ?? "");
+        setEditError(null);
+    }
+
+    function cancelEditingMessage() {
+        setEditingMessageId(null);
+        setEditBody("");
+        setEditError(null);
+    }
+
+    async function saveMessageEdit(messageId) {
+        const normalizedBody = editBody.trim();
+
+        if (!normalizedBody) {
+            setEditError(
+                "Message cannot be empty"
+            );
+            return;
+        }
+
+        setIsSavingEdit(true);
+        setEditError(null);
+
+        try {
+            const result =
+                await updateTicketMessageRequest(
+                    workspaceSlug,
+                    ticketId,
+                    messageId,
+                    {
+                        body: normalizedBody,
+                    }
+                );
+
+            const updatedMessage =
+                result?.data?.message;
+
+            if (updatedMessage) {
+                handleMessageUpdated(
+                    updatedMessage
+                );
+            }
+
+            setEditingMessageId(null);
+            setEditBody("");
+        } catch (error) {
+            setEditError(
+                error.message ||
+                "Unable to update message"
+            );
+        } finally {
+            setIsSavingEdit(false);
+        }
+    }
 
     useEffect(() => {
         if (!workspaceSlug || !ticketId) {
@@ -437,6 +511,16 @@ export default function TicketMessageTimeline({
                             message.type ===
                             "internal_note";
 
+                        const messageId =
+                            String(
+                                message.id ??
+                                message._id ??
+                                ""
+                            );
+
+                        const isEditing =
+                            editingMessageId === messageId;
+
                         return (
                             <li
                                 key={
@@ -473,9 +557,76 @@ export default function TicketMessageTimeline({
                                     </time>
                                 </div>
 
-                                <p className="ticket-message-body">
-                                    {message.body}
-                                </p>
+                                {isEditing ? (
+                                    <div className="ticket-message-edit">
+                                        <textarea
+                                            value={editBody}
+                                            onChange={(event) => {
+                                                setEditBody(
+                                                    event.target.value
+                                                );
+                                            }}
+                                            disabled={isSavingEdit}
+                                            rows={4}
+                                        />
+
+                                        {editError && (
+                                            <p className="ticket-message-edit-error">
+                                                {editError}
+                                            </p>
+                                        )}
+
+                                        <div className="ticket-message-edit-actions">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    saveMessageEdit(
+                                                        messageId
+                                                    );
+                                                }}
+                                                disabled={isSavingEdit}
+                                            >
+                                                {isSavingEdit
+                                                    ? "Saving"
+                                                    : "Save"
+                                                }
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                onClick={
+                                                    cancelEditingMessage
+                                                }
+                                                disabled={isSavingEdit}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <p className="ticket-message-body">
+                                            {message.body}
+                                        </p>
+
+                                        {message.editedAt && (
+                                            <small>
+                                                Edited
+                                            </small>
+                                        )}
+
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                startEditingMessage(
+                                                    message
+                                                );
+                                            }}
+                                        >
+                                            Edit
+                                        </button>
+                                    </>
+                                )}
                             </li>
                         );
                     })}
