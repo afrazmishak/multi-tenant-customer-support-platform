@@ -50,6 +50,7 @@ function getEntityId(value) {
 export default function TicketDetailsPanel({
     workspaceSlug,
     ticketId,
+    realtimeTicket,
     onClose,
 }) {
     const { members } = useWorkspacePresence();
@@ -113,14 +114,31 @@ export default function TicketDetailsPanel({
             cancelled = true;
             controller.abort();
         };
+
     }, [workspaceSlug, ticketId]);
 
     const isLoading =
         detailState.ticketId !== ticketId;
 
+    const realtimeTicketId =
+        getEntityId(realtimeTicket);
+
+    const isMatchingRealtimeTicket =
+        Boolean(
+            realtimeTicket &&
+            realtimeTicketId &&
+            String(realtimeTicketId) ===
+            String(ticketId)
+        );
+
     const ticket = isLoading
         ? null
-        : detailState.ticket;
+        : isMatchingRealtimeTicket
+            ? {
+                ...detailState.ticket,
+                ...realtimeTicket,
+            }
+            : detailState.ticket;
 
     const error = isLoading
         ? null
