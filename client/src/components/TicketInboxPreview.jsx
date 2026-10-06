@@ -388,6 +388,7 @@ export default function TicketInboxPreview({
                                         key={`${workspaceSlug}:${ticketId}`}
                                         workspaceSlug={workspaceSlug}
                                         ticketId={ticketId}
+                                        realtimeTicket={ticket}
                                         onClose={() => {
                                             closeTicket(ticketId);
                                         }}
