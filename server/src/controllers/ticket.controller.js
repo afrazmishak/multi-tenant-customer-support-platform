@@ -120,6 +120,18 @@ export const updateTicketController = asyncHandler(
             input: req.body,
         });
 
+        try {
+            emitTicketUpdated({
+                workspaceId,
+                ticket,
+            });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:updated",
+                error
+            );
+        }
+
         res.status(200).json({
             success: true,
             message: "Ticket updated successfully",
@@ -144,6 +156,18 @@ export const assignTicketController = asyncHandler(
             actorUserId,
             input: req.body,
         });
+
+        try {
+            emitTicketUpdated({
+                workspaceId,
+                ticket,
+            });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:updated",
+                error
+            );
+        }
 
         const message = ticket.assignedTo
             ? "Ticket assigned successfully"
@@ -178,6 +202,18 @@ export const changeTicketStatusController =
             workspaceId,
             ticket,
         });
+
+        try {
+            emitTicketUpdated({
+                workspaceId,
+                ticket,
+            });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:updated",
+                error
+            );
+        }
 
         res.status(200).json({
             success: true,
