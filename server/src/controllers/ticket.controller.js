@@ -1,6 +1,6 @@
 import AppError from "../utils/AppError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { emitTicketUpdated, } from "../socket/ticketRealtime.js";
+import { emitTicketCreated, emitTicketUpdated, } from "../socket/ticketRealtime.js";
 
 import {
     assignTicket,
@@ -54,6 +54,18 @@ export const createTicketController = asyncHandler(
             actorUserId,
             input: req.body,
         });
+
+        try {
+            emitTicketCreated({
+                workspaceId,
+                ticket,
+            });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:created",
+                error
+            );
+        }
 
         res.status(201).json({
             success: true,

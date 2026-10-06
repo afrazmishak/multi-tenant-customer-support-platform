@@ -72,3 +72,20 @@ export function emitTicketUpdated({
         }
     );
 }
+
+export function emitTicketCreated({
+    workspaceId,
+    ticket,
+}) {
+    const io = getSocketServer();
+
+    const workspaceRoom =
+        getWorkspaceRoom(workspaceId);
+
+    io.to(workspaceRoom).emit(
+        "ticket:created",
+        {
+            ticket,
+        }
+    );
+}
