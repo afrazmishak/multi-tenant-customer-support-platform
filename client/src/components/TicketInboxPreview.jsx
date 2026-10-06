@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 
 import {
+    socket,
+} from "../socket/socket.js";
+
+import {
     getWorkspaceTicketsRequest,
 } from "../api/ticketApi.js";
 
@@ -93,6 +97,7 @@ export default function TicketInboxPreview({
     }
 
     useEffect(() => {
+        // load tickets through HTTP
         if (!workspaceSlug) {
             return;
         }
@@ -150,8 +155,78 @@ export default function TicketInboxPreview({
         };
     }, [workspaceSlug]);
 
+    useEffect(() => {
+        // listen for ticket:updated
+        if (!workspaceSlug) {
+            return;
+        }
+
+        function handleTicketUpdated(payload) {
+            const updatedTicket =
+                payload?.ticket;
+
+            if (!updatedTicket) {
+                return;
+            }
+
+            const updatedTicketId =
+                String(
+                    updatedTicket.id ??
+                    updatedTicket._id ??
+                    ""
+                );
+
+            if (!updatedTicketId) {
+                return;
+            }
+
+            setTicketState((previous) => {
+                if (
+                    previous.workspaceSlug !==
+                    workspaceSlug
+                ) {
+                    return previous;
+                }
+
+                return {
+                    ...previous,
+
+                    tickets:
+                        previous.ticket.map(
+                            (ticket) => {
+                                const ticketId =
+                                    String(
+                                        ticket.id ??
+                                        ticket._id ??
+                                        ""
+                                    );
+
+                                return ticketId ===
+                                    updatedTicketId
+                                    ? updatedTicket
+                                    : ticket;
+                            }
+                        ),
+                };
+            });
+        }
+
+        socket.on(
+            "ticket:updated",
+            handleTicketUpdated
+        );
+
+        return () => {
+            socket.off(
+                "ticket:updated",
+                handleTicketUpdated
+            );
+        };
+    }, [workspaceSlug]);
+
     const isLoading =
-        ticketState.workspaceSlug !== workspaceSlug;
+        ticketState.workspaceSlug !==
+        workspaceSlug;
 
     const tickets = isLoading
         ? []
