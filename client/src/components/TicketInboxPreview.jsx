@@ -156,9 +156,60 @@ export default function TicketInboxPreview({
     }, [workspaceSlug]);
 
     useEffect(() => {
-        // listen for ticket:updated
         if (!workspaceSlug) {
             return;
+        }
+
+        function handleTicketCreated(payload) {
+            const createdTicket =
+                payload?.ticket;
+
+            if (!createdTicket) {
+                return;
+            }
+
+            const createdTicketId =
+                String(
+                    createdTicket.id ??
+                    createdTicket._id ??
+                    ""
+                );
+
+            if (!createdTicketId) {
+                return;
+            }
+
+            setTicketState((previous) => {
+                if (
+                    previous.workspaceSlug !==
+                    workspaceSlug
+                ) {
+                    return previous;
+                }
+
+                const alreadyExists =
+                    previous.tickets.some(
+                        (ticket) =>
+                            String(
+                                ticket.id ??
+                                ticket._id ??
+                                ""
+                            ) === createdTicketId
+                    );
+
+                if (alreadyExists) {
+                    return previous;
+                }
+
+                return {
+                    ...previous,
+
+                    tickets: [
+                        createdTicket,
+                        ...previous.tickets,
+                    ],
+                };
+            });
         }
 
         function handleTicketUpdated(payload) {
@@ -192,7 +243,7 @@ export default function TicketInboxPreview({
                     ...previous,
 
                     tickets:
-                        previous.ticket.map(
+                        previous.tickets.map(
                             (ticket) => {
                                 const ticketId =
                                     String(
@@ -216,10 +267,20 @@ export default function TicketInboxPreview({
             handleTicketUpdated
         );
 
+        socket.on(
+            "ticket:created",
+            handleTicketCreated
+        );
+
         return () => {
             socket.off(
                 "ticket:updated",
                 handleTicketUpdated
+            );
+
+            socket.off(
+                "ticket:created",
+                handleTicketCreated
             );
         };
     }, [workspaceSlug]);
