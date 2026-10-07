@@ -137,6 +137,12 @@ export default function TicketDetailsPanel({
             ? {
                 ...detailState.ticket,
                 ...realtimeTicket,
+
+                customer:
+                    typeof realtimeTicket.customer === "object"
+                        ? realtimeTicket.customer
+                        : detailState.ticket?.customer ??
+                        realtimeTicket.customer,
             }
             : detailState.ticket;
 

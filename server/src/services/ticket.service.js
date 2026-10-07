@@ -739,7 +739,13 @@ export async function getTicketById({
         _id: normalizedTicketId,
         workspace:
             normalizedWorkspaceId,
-    }).lean();
+    })
+        // To display the customer details
+        .populate({
+            path: "customer",
+            select: "_id name email",
+        })
+    .lean();
 
     if (!ticket) {
         throw new AppError(
