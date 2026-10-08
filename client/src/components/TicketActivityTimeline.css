@@ -1,0 +1,54 @@
+.ticket-activity-timeline {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.ticket-activity-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.ticket-activity-header h4 {
+    margin: 0;
+}
+
+.ticket-activity-header p {
+    margin: 4px 0 0;
+}
+
+.ticket-activity-list {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ticket-activity-item {
+    padding: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+.ticket-activity-meta {
+    display: grid;
+    gap: 4px;
+}
+
+.ticket-activity-meta time {
+    font-size: 0.85rem;
+}
+
+.ticket-activity-changes {
+    margin: 10px 0 0;
+    padding-left: 18px;
+}
+
+.ticket-activity-empty {
+    padding: 16px;
+    text-align: center;
+}

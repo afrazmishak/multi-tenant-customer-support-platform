@@ -9,6 +9,7 @@ import {
 } from "../context/WorkspacePresenceContext.js";
 
 import TicketMessageTimeline from "./TicketMessageTimeline.jsx";
+import TicketActivityTimeline from "./TicketActivityTimeline.jsx";
 
 import "./TicketDetailsPanel.css";
 
@@ -262,6 +263,11 @@ export default function TicketDetailsPanel({
                                 </p>
                             </div>
                         )}
+
+                    <TicketActivityTimeline
+                        workspaceSlug={workspaceSlug}
+                        ticketId={ticketId}
+                    />
 
                     <TicketMessageTimeline
                         workspaceSlug={workspaceSlug}
