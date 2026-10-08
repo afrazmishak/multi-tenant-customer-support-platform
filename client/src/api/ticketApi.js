@@ -54,3 +54,33 @@ export async function getTicketByIdRequest(
 
     return result;
 }
+
+export async function getTicketActivitiesRequest(
+    workspaceSlug,
+    ticketId,
+    {
+        signal,
+    } = {}
+) {
+    const url =
+        `${API_BASE_URL}/api/workspaces/` +
+        `${encodeURIComponent(workspaceSlug)}/tickets/` +
+        `${encodeURIComponent(ticketId)}/activities`;
+
+    const response = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        signal,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result?.message ||
+            `Unable to load ticket activities (${response.status})`
+        );
+    }
+
+    return result;
+}
