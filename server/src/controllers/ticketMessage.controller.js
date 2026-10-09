@@ -10,6 +10,7 @@ import {
 
 //Importing to give this controller access from ../socket/ticketRealtime.js to give controller access to connect the HTTP controller to the real-time layer
 import {
+    emitTicketActivityChanged,
     emitTicketMessageCreated,
     emitTicketMessageUpdated,
 } from "../socket/ticketRealtime.js"
@@ -98,6 +99,18 @@ export const createTicketMessageController =
         } catch (error) {
             console.error(
                 "Unable to emit ticket:message:created",
+                error
+            );
+        }
+
+        try {
+            emitTicketActivityChanged({
+                workspaceId,
+                ticketId,
+            });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:activity:changed",
                 error
             );
         }
@@ -211,6 +224,18 @@ export const updateTicketMessageController =
         } catch (error) {
             console.error(
                 "Unable to emit ticket:message:updated",
+                error
+            );
+        }
+
+        try {
+            emitTicketActivityChanged({
+                workspaceId,
+                ticketId,
+            });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:activity:changed",
                 error
             );
         }

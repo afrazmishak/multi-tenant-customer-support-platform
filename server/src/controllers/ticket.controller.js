@@ -1,6 +1,10 @@
 import AppError from "../utils/AppError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { emitTicketCreated, emitTicketUpdated, } from "../socket/ticketRealtime.js";
+import {
+    emitTicketActivityChanged,
+    emitTicketCreated,
+    emitTicketUpdated, 
+} from "../socket/ticketRealtime.js";
 
 import {
     assignTicket,
@@ -144,6 +148,18 @@ export const updateTicketController = asyncHandler(
             );
         }
 
+        try {
+            emitTicketActivityChanged({
+                workspaceId,
+                ticketId: req.param.ticketId,
+            });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:activity:changed",
+                error
+            );
+        }
+
         res.status(200).json({
             success: true,
             message: "Ticket updated successfully",
@@ -177,6 +193,18 @@ export const assignTicketController = asyncHandler(
         } catch (error) {
             console.error(
                 "Unable to emit ticket:updated",
+                error
+            );
+        }
+
+        try {
+            emitTicketActivityChanged({
+                workspaceId,
+                ticketId: req.params.ticketId,
+            });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:activity:changed",
                 error
             );
         }
@@ -223,6 +251,18 @@ export const changeTicketStatusController =
         } catch (error) {
             console.error(
                 "Unable to emit ticket:updated",
+                error
+            );
+        }
+
+        try {
+            emitTicketActivityChanged({
+                workspaceId,
+                ticketId: req.params.ticketId,
+            });
+        } catch (error) {
+            console.log(
+                "Unable to emit ticket:activity:changed",
                 error
             );
         }
