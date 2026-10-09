@@ -4,8 +4,13 @@ import {
 } from "react";
 
 import {
+    socket,
+} from "../socket/socket.js";
+
+import {
     getTicketActivitiesRequest,
 } from "../api/ticketApi.js";
+
 
 import "./TicketActivityTimeline.css"
 
@@ -170,7 +175,8 @@ export default function TicketActivityTimeline({
                 if (
                     cancelled ||
                     controller.signal.aborted ||
-                    error?.name === "AbortError"
+                    error?.name ===
+                    "AbortError"
                 ) {
                     return;
                 }
@@ -178,16 +184,44 @@ export default function TicketActivityTimeline({
                 setActivityState({
                     ticketId,
                     activities: [],
-                    error: error.message,
+                    error:
+                        error.message,
                 });
             }
         }
 
+        function handleActivityChanged(
+            payload
+        ) {
+            if (!payload) {
+                return;
+            }
+
+            if (
+                String(payload.ticketId) !==
+                String(ticketId)
+            ) {
+                return;
+            }
+
+            loadActivities();
+        }
+
         loadActivities();
+
+        socket.on(
+            "ticket:activity:changed",
+            handleActivityChanged
+        );
 
         return () => {
             cancelled = true;
             controller.abort();
+
+            socket.off(
+                "ticket:activity:changed",
+                handleActivityChanged
+            );
         };
     }, [
         workspaceSlug,
