@@ -89,3 +89,23 @@ export function emitTicketCreated({
         }
     );
 }
+
+export function emitTicketActivityChanged({
+    workspaceId,
+    ticketId
+}) {
+    const io = getSocketServer();
+
+    const ticketRoom =
+        getTicketRoom(
+            workspaceId,
+            ticketId
+        );
+
+    io.to(ticketRoom).emit(
+        "ticket:activity:changed",
+        {
+            ticketId,
+        }
+    );
+}
