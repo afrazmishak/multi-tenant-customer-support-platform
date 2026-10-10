@@ -84,3 +84,65 @@ export async function getTicketActivitiesRequest(
 
     return result;
 }
+
+export async function updateTicketAssignmentRequest(
+    workspaceSlug,
+    ticketId,
+    input
+) {
+    const url =
+        `${API_BASE_URL}/api/workspaces/` +
+        `${encodeURIComponent(workspaceSlug)}/tickets/` +
+        `${encodeURIComponent(ticketId)}/assignment`;
+
+    const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(input),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result?.message ||
+            `Unable to update ticket assignment (${response.status})`
+        );
+    }
+
+    return result;
+}
+
+export async function updateTicketStatusRequest(
+    workspaceSlug,
+    ticketId,
+    input
+) {
+    const url =
+        `${API_BASE_URL}/aapi/workspaces/` +
+        `${encodeURIComponent(workspaceSlug)}/tickets/` +
+        `${encodeURIComponent(ticketId)}/status`;
+
+    const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(input),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result?.message ||
+            `Unable to update ticket status (${response.status})`
+        );
+    }
+
+    return result;
+}
