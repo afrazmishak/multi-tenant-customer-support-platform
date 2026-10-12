@@ -11,6 +11,7 @@ import {
 import TicketMessageTimeline from "./TicketMessageTimeline.jsx";
 import TicketActivityTimeline from "./TicketActivityTimeline.jsx";
 import TicketStatusControl from "./TicketStatusControl.jsx";
+import TicketAssignmentControl from "./TicketAssignmentControl.jsx";
 
 import "./TicketDetailsPanel.css";
 
@@ -269,6 +270,12 @@ export default function TicketDetailsPanel({
                         workspaceSlug={workspaceSlug}
                         ticketId={ticketId}
                         status={ticket.status}
+                    />
+
+                    <TicketAssignmentControl
+                        workspaceSlug={workspaceSlug}
+                        ticketId={ticketId}
+                        assignedTo={ticket.assignedTo}
                     />
 
                     <TicketActivityTimeline
