@@ -33,6 +33,36 @@ export default function TicketLifecycleControl({
         status === "open" ||
         status === "in_progress";
 
+    const canClose =
+        status === "resolved";
+
+    const canReopen =
+        status === "resolved" ||
+        status === "closed";
+
+    async function changeStatus(input) {
+        setIsUpdating(true);
+        setError(null);
+
+        try {
+            await updateTicketStatusRequest(
+                workspaceSlug,
+                ticketId,
+                input
+            );
+
+            return true;
+        } catch (requestError) {
+            setError(
+                requestError.message
+            );
+
+            return false;
+        } finally {
+            setIsUpdating(false);
+        }
+    }
+
     async function handleResolve() {
         const normalizedSummary =
             resolutionSummary.trim();
@@ -45,74 +75,124 @@ export default function TicketLifecycleControl({
             return;
         }
 
-        setIsUpdating(true);
-        setError(null);
+        const succeeded =
+            await changeStatus({
+                status: "resolved",
 
-        try {
-            await updateTicketStatusRequest(
-                workspaceSlug,
-                ticketId,
-                {
-                    status: "resolved",
-                    resolutionSummary:
-                        normalizedSummary,
-                }
-            );
+                resolutionSummary:
+                    normalizedSummary,
+            });
 
+        if (succeeded) {
             setResolutionSummary("");
-        } catch (requestError) {
-            setError(
-                requestError.message
-            );
-        } finally {
-            setIsUpdating(false);
         }
     }
 
-    if (!canResolve) {
+    async function handleClose() {
+        await changeStatus({
+            status: "closed",
+        });
+    }
+
+    async function handleReopen() {
+        await changeStatus({
+            status: "open",
+        });
+    }
+
+    if (
+        !canResolve &&
+        !canClose &&
+        !canReopen
+    ) {
         return null;
     }
 
     return (
         <section className="ticket-lifecycle-control">
-            <h4>Resolve ticket</h4>
-            <p>Complete the ticket and record how the issue was resolved.</p>
+            <h4>Ticket lifecycle</h4>
 
-            <label htmlFor={`resolution-summary-${ticketId}`}>
-                Resolution summary
-            </label>
+            {canResolve && (
+                <div className="ticket-lifecycle-action">
+                    <h4>Resolve ticket</h4>
+                    <p>Complete the ticket and record how the issue was resolved.</p>
 
-            <textarea
-                id={`resolution-summary-${ticketId}`}
-                value={resolutionSummary}
-                onChange={(event) => {
-                    setResolutionSummary(
-                        event.target.value
-                    );
-                }}
-                placeholder="Explain how this ticket was resolved..."
-                rows={4}
-                disabled={isUpdating}
-            />
+                    <label htmlFor={`resolution-summary-${ticketId}`}>
+                        Resolution summary
+                    </label>
 
-            <button
-                type="button"
-                className="button button-primary"
-                onClick={
-                    handleResolve
-                }
-                disabled={
-                    isUpdating
-                }
-            >
-                {isUpdating
-                    ? "Resolving..."
-                    : "Resolve ticket"}
-            </button>
+                    <textarea
+                        id={`resolution-summary-${ticketId}`}
+                        value={resolutionSummary}
+                        onChange={(event) => {
+                            setResolutionSummary(
+                                event.target.value
+                            );
+                        }}
+                        placeholder="Explain how this ticket was resolved..."
+                        rows={4}
+                        disabled={isUpdating}
+                    />
+                    <button
+                        type="button"
+                        className="button button-primary"
+                        onClick={
+                            handleResolve
+                        }
+                        disabled={
+                            isUpdating
+                        }
+                    >
+                        {isUpdating
+                            ? "Resolving..."
+                            : "Resolve ticket"}
+                    </button>
+                </div>
+            )}
+
+            {canClose && (
+                <div className="ticket-lifecycle-action">
+                    <h5>Close ticket</h5>
+                    <p>Close this resolved ticket when no more work is required.</p>
+
+                    <button
+                        type="button"
+                        className="button button-primary"
+                        onClick={
+                            handleClose
+                        }
+                        disabled={
+                            isUpdating
+                        }
+                    >
+                        {isUpdating
+                            ? "Updating..."
+                            : "Close ticket"}
+                    </button>
+                </div>
+            )}
+
+            {canReopen && (
+                <div className="ticket-lifecycle-action">
+                    <h5>Reopen ticket</h5>
+                    <p>Return this ticket to active support.</p>
+                    <button
+                        type="button"
+                        className="button button-secondary"
+                        onClick={handleReopen}
+                        disabled={isUpdating}
+                    >
+                        {isUpdating
+                            ? "Updating..."
+                            : "Reopen ticket"}
+                    </button>
+                </div>
+            )}
 
             {error && (
                 <p role="alert">
-                    {error}
+                    Unable to update
+                    ticket: {error}
                 </p>
             )}
         </section>
