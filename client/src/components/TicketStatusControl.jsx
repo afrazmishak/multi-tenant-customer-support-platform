@@ -86,7 +86,11 @@ export default function TicketStatusControl({
                 id={`ticket-status-${ticketId}`}
                 value={status ?? ""}
                 onChange={handleStatusChange}
-                disabled={isUpdating}
+                disabled={
+                    isUpdating ||
+                    status === "resolved" ||
+                    status === "closed"
+                }
             >
                 {!currentStatusIsBasic &&
                     status && (
