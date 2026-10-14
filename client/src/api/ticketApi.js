@@ -146,3 +146,35 @@ export async function updateTicketStatusRequest(
 
     return result;
 }
+
+export async function updateTicketRequest(
+    workspaceSlug,
+    ticketId,
+    input
+) {
+    const url = 
+        `${API_BASE_URL}/api/workspaces/` +
+        `${encodeURIComponent(workspaceSlug)}/tickets/` +
+        `${encodeURIComponent(ticketId)}`;
+
+    const response = await fetch(url, {
+        method: "PATCH",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(input),
+    });
+
+    const result =
+        await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result?.message ||
+            `Unable to update ticket (${response.status})`
+        );
+    }
+
+    return result;
+}
