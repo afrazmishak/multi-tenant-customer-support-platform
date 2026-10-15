@@ -14,6 +14,7 @@ import TicketStatusControl from "./TicketStatusControl.jsx";
 import TicketAssignmentControl from "./TicketAssignmentControl.jsx";
 import TicketLifecycleControl from "./TicketLifecycleControl.jsx";
 import TicketPriorityControl from "./TicketPriorityControl.jsx";
+import TicketMetadataEditor from "./TicketMetadataEditor.jsx";
 
 import "./TicketDetailsPanel.css";
 
@@ -267,6 +268,12 @@ export default function TicketDetailsPanel({
                                 </p>
                             </div>
                         )}
+
+                    <TicketMetadataEditor
+                        workspaceSlug={workspaceSlug}
+                        ticketId={ticketId}
+                        ticket={ticket}
+                    />
 
                     <TicketStatusControl
                         workspaceSlug={workspaceSlug}
