@@ -175,7 +175,7 @@ export default function TicketMessageTimeline({
         );
 
     function startEditingMessage(message) {
-        const authorId = 
+        const authorId =
             getEntityId(
                 message.authorUser
             );
@@ -188,7 +188,7 @@ export default function TicketMessageTimeline({
         ) {
             return;
         }
-        
+
         const messageId =
             String(
                 message.id ??
@@ -332,30 +332,9 @@ export default function TicketMessageTimeline({
             return;
         }
 
-        function joinTicketRoom() {
-            socket.emit(
-                "ticket:join",
-                {
-                    ticketId,
-                },
-                (response) => {
-                    if (!response?.success) {
-                        console.error(
-                            "Unable to join ticket room",
-                            response
-                        );
-                    }
-                }
-            );
-        }
-
         function handleRealtimeMessageCreated(
             payload
         ) {
-            console.log(
-                "[ticket:message:created received]",
-                payload
-            );
             if (!payload) {
                 return;
             }
@@ -399,15 +378,6 @@ export default function TicketMessageTimeline({
             );
         }
 
-        if (socket.connected) {
-            joinTicketRoom();
-        }
-
-        socket.on(
-            "connect",
-            joinTicketRoom
-        );
-
         socket.on(
             "ticket:message:created",
             handleRealtimeMessageCreated
@@ -420,11 +390,6 @@ export default function TicketMessageTimeline({
 
         return () => {
             socket.off(
-                "connect",
-                joinTicketRoom
-            );
-
-            socket.off(
                 "ticket:message:created",
                 handleRealtimeMessageCreated
             );
@@ -433,15 +398,6 @@ export default function TicketMessageTimeline({
                 "ticket:message:updated",
                 handleRealtimeMessageUpdated
             );
-
-            if (socket.connected) {
-                socket.emit(
-                    "ticket:leave",
-                    {
-                        ticketId,
-                    }
-                );
-            }
         };
     }, [
         ticketId,

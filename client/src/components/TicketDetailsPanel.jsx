@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { socket, } from "../socket/socket.js";
 
 import {
     getTicketByIdRequest,
@@ -123,6 +124,60 @@ export default function TicketDetailsPanel({
         };
 
     }, [workspaceSlug, ticketId]);
+
+    useEffect(() => {
+        if (
+            !workspaceSlug ||
+            !ticketId
+        ) {
+            return;
+        }
+
+        function joinTicketRoom() {
+            socket.emit(
+                "ticket:join",
+                {
+                    ticketId,
+                },
+                (response) => {
+                    if (!response?.success) {
+                        console.error(
+                            "Unable to join ticket room",
+                            response
+                        );
+                    }
+                }
+            );
+        }
+
+        if (socket.connected) {
+            joinTicketRoom();
+        }
+
+        socket.on(
+            "connect",
+            joinTicketRoom
+        );
+
+        return () => {
+            socket.off(
+                "connect",
+                joinTicketRoom
+            );
+
+            if (socket.connected) {
+                socket.emit(
+                    "ticket:leave",
+                    {
+                        ticketId,
+                    }
+                );
+            }
+        };
+    }, [
+        workspaceSlug,
+        ticketId
+    ]);
 
     const isLoading =
         detailState.ticketId !== ticketId;
