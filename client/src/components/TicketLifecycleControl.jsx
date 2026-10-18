@@ -96,7 +96,7 @@ export default function TicketLifecycleControl({
 
     async function handleReopen() {
         await changeStatus({
-            status: "open",
+            status: "in_progress",
         });
     }
 
