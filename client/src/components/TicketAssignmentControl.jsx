@@ -50,7 +50,7 @@ export default function TicketAssignmentControl({
         getEntityId(assignedTo) ?? "";
 
     const assignableMembers =
-        members.filter((member) => {
+        (members ?? []).filter((member) => {
             const role =
                 String(
                     member.role ?? ""
@@ -117,27 +117,41 @@ export default function TicketAssignmentControl({
                     Unassigned
                 </option>
 
-                {assignableMembers.map(
-                    (member) => (
+                {assignableMembers.map((member) => {
+                    const userId =
+                        String(
+                            member?.user?.id ?? ""
+                        );
+
+                    const userName =
+                        member?.user?.name ??
+                        "Unnamed member";
+
+                    const role =
+                        String(
+                            member?.role ?? ""
+                        ).toUpperCase();
+
+                    if (!userId) {
+                        return null;
+                    }
+
+                    return (
                         <option
-                            key={member.user.id}
-                            value={member.user.id}
+                            key={userId}
+                            value={userId}
                         >
-                            {
-                                member.user
-                                    .name
-                            }{" "}
-                            ({member.role})
+                            {`${userName} (${role})`}
                         </option>
-                    )
-                )}
+                    );
+                })}
             </select>
 
             {directoryLoading && (
                 <p>Loading workspace members...</p>
             )}
 
-            {isUpdating & 7(
+            {isUpdating && (
                 <p role="alert">
                     Unable to update assignment: {error}
                 </p>

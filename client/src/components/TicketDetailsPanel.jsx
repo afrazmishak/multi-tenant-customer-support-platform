@@ -216,10 +216,13 @@ export default function TicketDetailsPanel({
         ticket?.assignedTo
     );
 
-    const assignee = members.find(
-        (member) =>
-            String(member.user.id) === assigneeId
-    );
+    const assignee =
+        (members ?? []).find(
+            (member) =>
+                String(
+                    member?.user?.id ?? ""
+                ) === assigneeId
+        );
 
     const customer =
         ticket?.customer &&

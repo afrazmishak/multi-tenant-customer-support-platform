@@ -122,7 +122,7 @@ export async function updateTicketStatusRequest(
     input
 ) {
     const url =
-        `${API_BASE_URL}/aapi/workspaces/` +
+        `${API_BASE_URL}/api/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/tickets/` +
         `${encodeURIComponent(ticketId)}/status`;
 

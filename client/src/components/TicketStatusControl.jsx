@@ -6,7 +6,7 @@ import {
     updateTicketStatusRequest,
 } from "../api/ticketApi.js";
 
-const BASIC_STATUS_OPTION = [
+const BASIC_STATUS_OPTIONS = [
     {
         value: "open",
         label: "Open",
@@ -71,15 +71,27 @@ export default function TicketStatusControl({
     }
 
     const currentStatusIsBasic =
-        BASIC_STATUS_OPTION.some(
+        BASIC_STATUS_OPTIONS.some(
             (option) =>
                 option.value === status
         );
 
+    const statusOptions =
+        !currentStatusIsBasic && status
+            ? [
+                {
+                    value: status,
+                    label: formatLabel(status),
+                    disabled: true,
+                },
+                ...BASIC_STATUS_OPTIONS,
+            ]
+            : BASIC_STATUS_OPTIONS;
+
     return (
         <section className="ticket-status-control">
             <label htmlFor={`ticket-status-${ticketId}`}>
-                Change  status
+                Change status
             </label>
 
             <select
@@ -92,19 +104,14 @@ export default function TicketStatusControl({
                     status === "closed"
                 }
             >
-                {!currentStatusIsBasic &&
-                    status && (
-                        <option
-                            value={status}
-                            disabled
-                        >{formatLabel(status)}</option>
-                    )}
-
-                {BASIC_STATUS_OPTION.map(
+                {statusOptions.map(
                     (option) => (
                         <option
-                            key={option.key}
+                            key={option.value}
                             value={option.value}
+                            disabled={
+                                option.disabled === true
+                            }
                         >
                             {option.label}
                         </option>

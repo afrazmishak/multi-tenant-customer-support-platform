@@ -422,10 +422,15 @@ export default function TicketMessageTimeline({
         : messageState.error;
 
     const memberMap = new Map(
-        members.map((member) => [
-            String(member.user.id),
-            member,
-        ])
+        (members ?? [])
+            .filter(
+                (member) =>
+                    member?.user?.id
+            )
+            .map((member) => [
+                String(member.user.id),
+                member,
+            ])
     );
 
 
