@@ -238,17 +238,51 @@ export default function TicketDetailsPanel({
             className="ticket-details"
             aria-label="Ticket details"
         >
-            <header className="ticket-details-header">
-                <h3>Ticket Details</h3>
+            <div className="ticket-details-sticky-top">
+                <header className="ticket-details-header">
+                    <div className="ticket-details-heading">
+                        <span className="ticket-details-reference">
+                            {ticket
+                                ? ticket.reference ??
+                                `#${ticket.ticketNumber}`
+                                : "Ticket Details"}
+                        </span>
 
-                <button
-                    type="button"
-                    className="button button-secondary"
-                    onClick={onClose}
-                >
-                    Close details
-                </button>
-            </header>
+                        {ticket && (
+                            <h3>{ticket.subject}</h3>
+                        )}
+                    </div>
+
+                    <button type="button"
+                        className="button button-secondary"
+                        onClick={onClose}
+                    >
+                        Close
+                    </button>
+                </header>
+
+                {ticket && (
+                    <div className="ticket-details-summary">
+                        <span>
+                            <strong>Status:</strong>{" "}
+                            {formatLabel(ticket.status)}
+                        </span>
+
+                        <span>
+                            <strong>Priority:</strong>{" "}
+                            {formatLabel(ticket.priority)}
+                        </span>
+
+                        <span>
+                            <strong>Assigned:</strong>{" "}
+                            {!assigneeId
+                                ? "Unassigned"
+                                : assignee?.user?.name ??
+                                "Unavailable"}
+                        </span>
+                    </div>
+                )}
+            </div>
 
             {isLoading ? (
                 <p>Loading ticket details...</p>
@@ -258,12 +292,6 @@ export default function TicketDetailsPanel({
                 </p>
             ) : ticket ? (
                 <>
-                    <p className="ticket-reference">
-                        {ticket.reference ??
-                            `#${ticket.ticketNumber}`}
-                    </p>
-
-                    <h3>{ticket.subject}</h3>
 
                     <div className="ticket-details-grid">
                         <div>
@@ -342,29 +370,31 @@ export default function TicketDetailsPanel({
                         ticket={ticket}
                     />
 
-                    <TicketStatusControl
-                        workspaceSlug={workspaceSlug}
-                        ticketId={ticketId}
-                        status={ticket.status}
-                    />
+                    <div className="ticket-action-panel">
+                        <TicketStatusControl
+                            workspaceSlug={workspaceSlug}
+                            ticketId={ticketId}
+                            status={ticket.status}
+                        />
 
-                    <TicketPriorityControl
-                        workspaceSlug={workspaceSlug}
-                        ticketId={ticketId}
-                        priority={ticket.priority}
-                    />
+                        <TicketPriorityControl
+                            workspaceSlug={workspaceSlug}
+                            ticketId={ticketId}
+                            priority={ticket.priority}
+                        />
 
-                    <TicketAssignmentControl
-                        workspaceSlug={workspaceSlug}
-                        ticketId={ticketId}
-                        assignedTo={ticket.assignedTo}
-                    />
+                        <TicketAssignmentControl
+                            workspaceSlug={workspaceSlug}
+                            ticketId={ticketId}
+                            assignedTo={ticket.assignedTo}
+                        />
 
-                    <TicketLifecycleControl
-                        workspaceSlug={workspaceSlug}
-                        ticketId={ticketId}
-                        ticket={ticket}
-                    />
+                        <TicketLifecycleControl
+                            workspaceSlug={workspaceSlug}
+                            ticketId={ticketId}
+                            ticket={ticket}
+                        />
+                    </div>
 
                     <div className="ticket-details-tabs">
                         <div className="ticket-details-tab-list"
