@@ -69,6 +69,8 @@ export default function TicketDetailsPanel({
         error: null,
     });
 
+    const [activeTab, setActiveTab] = useState("conversation");
+
     useEffect(() => {
         if (!workspaceSlug || !ticketId) {
             return;
@@ -364,16 +366,62 @@ export default function TicketDetailsPanel({
                         ticket={ticket}
                     />
 
-                    <TicketActivityTimeline
-                        workspaceSlug={workspaceSlug}
-                        ticketId={ticketId}
-                    />
+                    <div className="ticket-details-tabs">
+                        <div className="ticket-details-tab-list"
+                            role="tablist"
+                            aria-label="Ticket information">
+                            <button type="button"
+                                role="tab"
+                                aria-selected={
+                                    activeTab === "conversation"
+                                }
+                                className={
+                                    activeTab === "conversation"
+                                        ? "ticket-details-tab active"
+                                        : "ticket-details-tab"
+                                }
+                                onClick={() => {
+                                    setActiveTab("conversation");
+                                }}
+                            >
+                                Conversation
+                            </button>
 
-                    <TicketMessageTimeline
-                        workspaceSlug={workspaceSlug}
-                        ticketId={ticketId}
-                        ticketStatus={ticket.status}
-                    />
+                            <button type="button"
+                                role="tab"
+                                aria-selected={
+                                    activeTab === "activity"
+                                }
+                                className={
+                                    activeTab === "activity"
+                                        ? "ticket-details-tab active"
+                                        : "ticket-details-tab"
+                                }
+                                onClick={() => {
+                                    setActiveTab("activity");
+                                }}
+                            >
+                                Activity
+                            </button>
+                        </div>
+
+                        <div className="ticket-details-tab-content">
+                            {activeTab === "conversation" && (
+                                <TicketMessageTimeline
+                                    workspaceSlug={workspaceSlug}
+                                    ticketId={ticketId}
+                                    ticketStatus={ticket.status}
+                                />
+                            )}
+
+                            {activeTab === "activity" && (
+                                <TicketActivityTimeline
+                                    workspaceSlug={workspaceSlug}
+                                    ticketId={ticketId}
+                                />
+                            )}
+                        </div>
+                    </div>
                 </>
             ) : null}
         </section>
