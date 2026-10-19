@@ -12,7 +12,7 @@ import {
     useWorkspacePresence,
 } from "../context/WorkspacePresenceContext.js";
 
-import TicketDetailsPanel from "./TicketDetailsPanel.jsx";
+import TicketDetailsDrawer from "./TicketDetailsDrawer.jsx";
 
 import "./TicketInboxPreview.css";
 
@@ -72,28 +72,17 @@ export default function TicketInboxPreview({
         error: null,
     });
 
-    const [openTicketIds, setOpenTicketIds] =
-        useState([]);
+    const [
+        selectedTicketId,
+        setSelectedTicketId,
+    ] = useState(null);
 
     function openTicket(ticketId) {
-        setOpenTicketIds((previous) => {
-            if (previous.includes(ticketId)) {
-                return previous;
-            }
-
-            return [
-                ...previous,
-                ticketId,
-            ];
-        });
+        setSelectedTicketId(ticketId);
     }
 
-    function closeTicket(ticketId) {
-        setOpenTicketIds((previous) =>
-            previous.filter(
-                (id) => id !== ticketId
-            )
-        );
+    function closeTicket() {
+        setSelectedTicketId(null);
     }
 
     useEffect(() => {
@@ -346,8 +335,8 @@ export default function TicketInboxPreview({
                         const ticketId =
                             String(ticket.id ?? ticket._id);
 
-                        const isOpen =
-                            openTicketIds.includes(ticketId);
+                        const isSelected =
+                            selectedTicketId === ticketId;
 
                         const assignedId =
                             getAssigneeId(ticket.assignedTo);
@@ -436,26 +425,23 @@ export default function TicketInboxPreview({
                                     onClick={() => {
                                         openTicket(ticketId);
                                     }}
-                                    disabled={isOpen}
+                                    disabled={isSelected}
                                 >
-                                    {isOpen
+                                    {isSelected
                                         ? "Details open"
                                         : "View details"
                                     }
                                 </button>
 
-                                {isOpen && (
-                                    <TicketDetailsPanel
+                                {isSelected && (
+                                    <TicketDetailsDrawer
                                         key={`${workspaceSlug}:${ticketId}`}
                                         workspaceSlug={workspaceSlug}
                                         ticketId={ticketId}
                                         realtimeTicket={ticket}
-                                        onClose={() => {
-                                            closeTicket(ticketId);
-                                        }}
+                                        onClose={closeTicket}
                                     />
                                 )}
-
                             </li>
                         );
                     })}

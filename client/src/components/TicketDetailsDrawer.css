@@ -1,0 +1,30 @@
+.ticket-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: flex;
+    justify-content: flex-end;
+
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.ticket-drawer {
+    width: min(720px, 90vw);
+    height: 100vh;
+
+    overflow-y: auto;
+
+    background: #ffffff;
+
+    box-shadow:
+        -8px 0 30px
+        rgba(0, 0, 0, 0.15);
+}
+
+.ticket-drawer .ticket-details {
+    min-height: 100%;
+    margin: 0;
+
+    border-radius: 0;
+}
