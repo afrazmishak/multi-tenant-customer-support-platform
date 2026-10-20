@@ -6,7 +6,8 @@
     display: flex;
     justify-content: flex-end;
 
-    background: rgba(0, 0, 0, 0.35);
+    background:
+        rgba(0, 0, 0, 0.38);
 }
 
 .ticket-drawer {
@@ -14,12 +15,13 @@
     height: 100vh;
 
     overflow-y: auto;
+    overscroll-behavior: contain;
 
     background: #ffffff;
 
     box-shadow:
         -8px 0 30px
-        rgba(0, 0, 0, 0.15);
+        rgba(0, 0, 0, 0.18);
 }
 
 .ticket-drawer .ticket-details {
@@ -27,4 +29,10 @@
     margin: 0;
 
     border-radius: 0;
+}
+
+@media (max-width: 768px) {
+    .ticket-drawer {
+        width: 100vw;
+    }
 }

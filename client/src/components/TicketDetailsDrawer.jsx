@@ -18,6 +18,12 @@ export default function TicketDetailsDrawer({
             }
         }
 
+        const previousOverflow =
+            document.body.style.overflow;
+
+        document.body.style.overflow =
+            "hidden";
+
         window.addEventListener(
             "keydown",
             handleKeyDown
@@ -28,11 +34,15 @@ export default function TicketDetailsDrawer({
                 "keydown",
                 handleKeyDown
             );
+
+            document.body.style.overflow =
+                previousOverflow;
         };
     }, [onClose]);
 
     return (
-        <div className="ticket-drawer-backdrop"
+        <div
+            className="ticket-drawer-backdrop"
             onMouseDown={(event) => {
                 if (
                     event.target ===
@@ -42,10 +52,13 @@ export default function TicketDetailsDrawer({
                 }
             }}
         >
-            <aside className="ticket-drawer"
+            <aside
+                className="ticket-drawer"
                 role="dialog"
                 aria-modal="true"
-                aria-label="Ticket details">
+                aria-label="Ticket details"
+                tabIndex={-1}
+            >
                 <TicketDetailsPanel
                     workspaceSlug={workspaceSlug}
                     ticketId={ticketId}
