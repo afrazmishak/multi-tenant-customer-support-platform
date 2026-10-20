@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
     socket,
@@ -76,6 +76,14 @@ export default function TicketInboxPreview({
         selectedTicketId,
         setSelectedTicketId,
     ] = useState(null);
+
+    const [queueFilters, setQueueFilters] =
+        useState({
+            search: "",
+            status: "all",
+            priority: "all",
+            sort: "updated_desc",
+        });
 
     function openTicket(ticketId) {
         setSelectedTicketId(ticketId);
@@ -278,9 +286,113 @@ export default function TicketInboxPreview({
         ticketState.workspaceSlug !==
         workspaceSlug;
 
-    const tickets = isLoading
-        ? []
-        : ticketState.tickets;
+    const tickets = useMemo(
+        () =>
+            isLoading
+                ? []
+                : ticketState.tickets,
+        [
+            isLoading,
+            ticketState.tickets
+        ]
+    );
+
+    const visibleTickets = useMemo(() => {
+        const search =
+            queueFilters.search
+                .trim()
+                .toLowerCase();
+
+        const filteredTickets =
+            tickets.filter((ticket) => {
+                if (
+                    queueFilters.status !== "all" &&
+                    ticket.status !==
+                    queueFilters.status
+                ) {
+                    return false;
+                }
+
+                if (
+                    queueFilters.priority !== "all" &&
+                    ticket.priority !==
+                    queueFilters.priority
+                ) {
+                    return false;
+                }
+
+                if (!search) {
+                    return true;
+                }
+
+                const reference =
+                    String(
+                        ticket.reference ??
+                        ticket.ticketNumber ??
+                        ""
+                    ).toLowerCase();
+
+                const subject =
+                    String(
+                        ticket.subject ?? ""
+                    ).toLowerCase();
+
+                const category =
+                    String(
+                        ticket.category ?? ""
+                    ).toLowerCase();
+
+                const tags =
+                    Array.isArray(ticket.tags)
+                        ? ticket.tags.join(" ")
+                        : "";
+
+                const customerName =
+                    typeof ticket.customer ===
+                        "object"
+                        ? String(
+                            ticket.customer?.name ??
+                            ""
+                        ).toLowerCase()
+                        : "";
+
+                return [
+                    reference,
+                    subject,
+                    category,
+                    tags.toLowerCase(),
+                    customerName,
+                ].some((value) =>
+                    value.includes(search)
+                );
+            });
+
+        return [...filteredTickets].sort(
+            (ticketA, ticketB) => {
+                const updatedA =
+                    new Date(
+                        ticketA.updatedAt ?? 0
+                    ).getTime();
+
+                const updatedB =
+                    new Date(
+                        ticketB.updatedAt ?? 0
+                    ).getTime();
+
+                if (
+                    queueFilters.sort ===
+                    "updated_asc"
+                ) {
+                    return updatedA - updatedB;
+                }
+
+                return updatedB - updatedA;
+            }
+        );
+    }, [
+        tickets,
+        queueFilters,
+    ]);
 
     const error = isLoading
         ? null
@@ -310,10 +422,130 @@ export default function TicketInboxPreview({
 
                 {!isLoading && !error && (
                     <span className="ticket-count">
+                        {visibleTickets.length} of {" "}
                         {tickets.length} displayed
                     </span>
                 )}
             </header>
+
+            <div className="ticket-inbox-controls">
+                <input
+                    type="search"
+                    placeholder="Search tickets..."
+                    value={queueFilters.search}
+                    onChange={(event) => {
+                        setQueueFilters(
+                            (previous) => ({
+                                ...previous,
+                                search:
+                                    event.target.value,
+                            })
+                        );
+                    }}
+                />
+
+                <select
+                    value={queueFilters.status}
+                    onChange={(event) => {
+                        setQueueFilters(
+                            (previous) => ({
+                                ...previous,
+                                status:
+                                    event.target.value,
+                            })
+                        );
+                    }}
+                >
+                    <option value="all">
+                        All statuses
+                    </option>
+
+                    <option value="open">
+                        Open
+                    </option>
+
+                    <option value="in_progress">
+                        In Progress
+                    </option>
+
+                    <option value="resolved">
+                        Resolved
+                    </option>
+
+                    <option value="closed">
+                        Closed
+                    </option>
+                </select>
+
+                <select
+                    value={queueFilters.priority}
+                    onChange={(event) => {
+                        setQueueFilters(
+                            (previous) => ({
+                                ...previous,
+                                priority:
+                                    event.target.value,
+                            })
+                        );
+                    }}
+                >
+                    <option value="all">
+                        All priorities
+                    </option>
+
+                    <option value="low">
+                        Low
+                    </option>
+
+                    <option value="normal">
+                        Normal
+                    </option>
+
+                    <option value="high">
+                        High
+                    </option>
+
+                    <option value="urgent">
+                        Urgent
+                    </option>
+                </select>
+
+                <select
+                    value={queueFilters.sort}
+                    onChange={(event) => {
+                        setQueueFilters(
+                            (previous) => ({
+                                ...previous,
+                                sort:
+                                    event.target.value,
+                            })
+                        );
+                    }}
+                >
+                    <option value="updated_desc">
+                        Recently updated
+                    </option>
+
+                    <option value="updated_asc">
+                        Oldest updated
+                    </option>
+                </select>
+
+                <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => {
+                        setQueueFilters({
+                            search: "",
+                            status: "all",
+                            priority: "all",
+                            sort: "updated_desc",
+                        });
+                    }}
+                >
+                    Clear filters
+                </button>
+            </div>
 
             {isLoading ? (
                 <p>Loading tickets...</p>
@@ -324,14 +556,15 @@ export default function TicketInboxPreview({
             ) : tickets.length === 0 ? (
                 <div className="ticket-empty-state">
                     <h3>No tickets found</h3>
-
-                    <p>
-                        This workspace has no tickets in the current result.
-                    </p>
+                </div>
+            ) : visibleTickets.length === 0 ? (
+                <div className="ticket-empty-state">
+                    <h3>No matching tickets</h3>
+                    <p>Try changing your search or filters</p>
                 </div>
             ) : (
                 <ul className="ticket-list">
-                    {tickets.map((ticket) => {
+                    {visibleTickets.map((ticket) => {
                         const ticketId =
                             String(ticket.id ?? ticket._id);
 

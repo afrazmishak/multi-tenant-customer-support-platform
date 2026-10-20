@@ -1,4 +1,3 @@
-
 .ticket-inbox {
     display: flex;
     flex-direction: column;
@@ -179,5 +178,42 @@
 
     .ticket-item {
         padding: 14px;
+    }
+}
+
+.ticket-inbox-controls {
+    display: grid;
+
+    grid-template-columns:
+        minmax(220px, 2fr) repeat(3, minmax(140px, 1fr)) auto;
+
+    gap: 10px;
+
+    margin: 18px 0;
+}
+
+.ticket-inbox-controls input,
+.ticket-inbox-controls select {
+    min-height: 40px;
+
+    padding: 8px 10px;
+
+    border: 1px solid #d8d8d8;
+    border-radius: 6px;
+
+    font: inherit;
+    background: #ffffff;
+}
+
+@media (max-width: 900px) {
+    .ticket-inbox-controls {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .ticket-inbox-controls {
+        grid-template-columns: 1fr;
     }
 }
