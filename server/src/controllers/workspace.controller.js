@@ -11,6 +11,7 @@ export function getWorkspaceContext(req, res) {
         data: {
             workspace: req.tenantContext.workspace,
             membership: req.tenantContext.membership,
+            currentUserId: req.tenantContext.userId,
         },
     });
 }
