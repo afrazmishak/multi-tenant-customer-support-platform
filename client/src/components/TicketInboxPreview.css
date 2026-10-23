@@ -228,6 +228,11 @@
 }
 
 .ticket-queue-view {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 8px;
+
     padding: 8px 14px;
 
     border: 1px solid #d8d8d8;
@@ -246,6 +251,31 @@
 .ticket-queue-view.active {
     background: #222222;
     border-color: #222222;
+
+    color: #ffffff;
+}
+
+.ticket-queue-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 24px;
+    height: 24px;
+
+    padding: 0 7px;
+
+    border-radius: 999px;
+
+    background: #eeeeee;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ticket-queue-view.active .ticket-queue-count {
+    background:
+        rgba(255, 255, 255, 0.18);
 
     color: #ffffff;
 }

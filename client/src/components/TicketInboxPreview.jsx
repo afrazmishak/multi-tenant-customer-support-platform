@@ -360,6 +360,39 @@ export default function TicketInboxPreview({
         ]
     );
 
+    const queueCounts = useMemo(() => {
+        let myTickets = 0;
+        let unassignedTickets = 0;
+
+        for (const ticket of tickets) {
+            const assignedTo =
+                getAssigneeId(
+                    ticket.assignedTo
+                );
+
+            if (!assignedTo) {
+                unassignedTickets += 1;
+            }
+
+            if (
+                currentUserId &&
+                assignedTo ===
+                String(currentUserId)
+            ) {
+                myTickets += 1;
+            }
+        }
+
+        return {
+            all: tickets.length,
+            mine: myTickets,
+            unassigned: unassignedTickets,
+        };
+    }, [
+        tickets,
+        currentUserId,
+    ]);
+
     const visibleTickets = useMemo(() => {
         const search =
             queueFilters.search
@@ -528,7 +561,11 @@ export default function TicketInboxPreview({
                         setQueueView("all")
                     }}
                 >
-                    All tickets
+                    <span>All Tickets</span>
+
+                    <span className="ticket-queue-count">
+                        {queueCounts.all}
+                    </span>
                 </button>
 
                 <button
@@ -543,7 +580,14 @@ export default function TicketInboxPreview({
                     }}
                     disabled={!currentUserId}
                 >
-                    My Tickets
+
+                    <span>My Tickets</span>
+
+                    <span className="ticket-queue-count">
+                        {currentUserId
+                            ? queueCounts.mine
+                            : "-"}
+                    </span>
                 </button>
 
                 <button
@@ -559,7 +603,10 @@ export default function TicketInboxPreview({
                         );
                     }}
                 >
-                    Unassigned
+                    <span>Unassigned</span>
+                    <span className="ticket-queue-count">
+                        {queueCounts.unassigned}
+                    </span>
                 </button>
             </div>
 
