@@ -217,3 +217,35 @@
         grid-template-columns: 1fr;
     }
 }
+
+.ticket-queue-views {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    margin: 18px 0 10px;
+}
+
+.ticket-queue-view {
+    padding: 8px 14px;
+
+    border: 1px solid #d8d8d8;
+    border-radius: 999px;
+
+    background: #ffffff;
+
+    font: inherit;
+    cursor: pointer;
+}
+
+.ticket-queue-view:hover {
+    background: #f5f5f5;
+}
+
+.ticket-queue-view.active {
+    background: #222222;
+    border-color: #222222;
+
+    color: #ffffff;
+}

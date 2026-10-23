@@ -5,6 +5,7 @@ import {
 } from "../socket/socket.js";
 
 import {
+    getWorkspaceContextRequest,
     getWorkspaceTicketsRequest,
 } from "../api/ticketApi.js";
 
@@ -84,6 +85,11 @@ export default function TicketInboxPreview({
             priority: "all",
             sort: "updated_desc",
         });
+
+    const [queueView, setQueueView] =
+        useState("all");
+
+    const [currentUserId, setCurrentUserId,] = useState(null);
 
     function openTicket(ticketId) {
         setSelectedTicketId(ticketId);
@@ -282,6 +288,63 @@ export default function TicketInboxPreview({
         };
     }, [workspaceSlug]);
 
+    useEffect(() => {
+        if (!workspaceSlug) {
+            return;
+        }
+
+        const controller =
+            new AbortController();
+
+        let cancelled = false;
+
+        async function loadWorkspaceContext() {
+            try {
+                const result =
+                    await getWorkspaceContextRequest(
+                        workspaceSlug,
+                        {
+                            signal:
+                                controller.signal,
+                        }
+                    );
+
+                const userId =
+                    result?.data
+                        ?.currentUserId;
+
+                if (!cancelled) {
+                    setCurrentUserId(
+                        userId
+                            ? String(userId)
+                            : null
+                    );
+                }
+            } catch (error) {
+                if (
+                    cancelled ||
+                    error.name === "AbortError"
+                ) {
+                    return;
+                }
+
+                console.error(
+                    "Unable to load workspace context",
+                    error
+                );
+
+                setCurrentUserId(null);
+            }
+        }
+
+        loadWorkspaceContext();
+
+        return () => {
+            cancelled = true;
+            controller.abort();
+        };
+    }, [workspaceSlug]);
+
     const isLoading =
         ticketState.workspaceSlug !==
         workspaceSlug;
@@ -305,6 +368,29 @@ export default function TicketInboxPreview({
 
         const filteredTickets =
             tickets.filter((ticket) => {
+                const assignedTo =
+                    getAssigneeId(
+                        ticket.assignedTo
+                    );
+
+                if (
+                    queueView === "mine" &&
+                    (
+                        !currentUserId ||
+                        assignedTo !==
+                        String(currentUserId)
+                    )
+                ) {
+                    return false;
+                }
+
+                if (
+                    queueView === "unassigned" &&
+                    assignedTo
+                ) {
+                    return false
+                }
+
                 if (
                     queueFilters.status !== "all" &&
                     ticket.status !==
@@ -392,6 +478,8 @@ export default function TicketInboxPreview({
     }, [
         tickets,
         queueFilters,
+        queueView,
+        currentUserId,
     ]);
 
     const error = isLoading
@@ -427,6 +515,53 @@ export default function TicketInboxPreview({
                     </span>
                 )}
             </header>
+
+            <div className="ticket-queue-views">
+                <button
+                    type="button"
+                    className={
+                        queueView === "all"
+                            ? "ticket-queue-view acitve"
+                            : "ticket-queue-view"
+                    }
+                    onClick={() => {
+                        setQueueView("all")
+                    }}
+                >
+                    All tickets
+                </button>
+
+                <button
+                    type="button"
+                    className={
+                        queueView === "mine"
+                            ? "ticket-queue-view active"
+                            : "ticket-queue-view"
+                    }
+                    onClick={() => {
+                        setQueueView("mine")
+                    }}
+                    disabled={!currentUserId}
+                >
+                    My Tickets
+                </button>
+
+                <button
+                    type="button"
+                    className={
+                        queueView === "unassigned"
+                            ? "ticket-queue-view active"
+                            : "ticket-queue-view"
+                    }
+                    onClick={() => {
+                        setQueueView(
+                            "unassigned"
+                        );
+                    }}
+                >
+                    Unassigned
+                </button>
+            </div>
 
             <div className="ticket-inbox-controls">
                 <input

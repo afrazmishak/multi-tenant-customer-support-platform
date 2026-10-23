@@ -152,7 +152,7 @@ export async function updateTicketRequest(
     ticketId,
     input
 ) {
-    const url = 
+    const url =
         `${API_BASE_URL}/api/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/tickets/` +
         `${encodeURIComponent(ticketId)}`;
@@ -173,6 +173,32 @@ export async function updateTicketRequest(
         throw new Error(
             result?.message ||
             `Unable to update ticket (${response.status})`
+        );
+    }
+
+    return result;
+}
+
+export async function getWorkspaceContextRequest(
+    workspaceSlug,
+    options = {}
+) {
+    const url =
+        `${API_BASE_URL}/api/workspaces/` +
+        `${encodeURIComponent(workspaceSlug)}/context`;
+
+    const response = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        signal: options.signal,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result?.message ||
+            `Unable to load workspace context (${response.status})`
         );
     }
 
