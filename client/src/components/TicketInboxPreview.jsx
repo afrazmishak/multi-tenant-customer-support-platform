@@ -59,6 +59,14 @@ function getAssigneeId(assignedTo) {
     ) || null;
 }
 
+const PRIORITY_RANK =
+    Object.freeze({
+        low: 1,
+        normal: 2,
+        high: 3,
+        urgent: 4,
+    });
+
 export default function TicketInboxPreview({
     workspaceSlug,
 }) {
@@ -90,6 +98,8 @@ export default function TicketInboxPreview({
         useState("all");
 
     const [currentUserId, setCurrentUserId,] = useState(null);
+
+
 
     function openTicket(ticketId) {
         setSelectedTicketId(ticketId);
@@ -498,6 +508,48 @@ export default function TicketInboxPreview({
                         ticketB.updatedAt ?? 0
                     ).getTime();
 
+                const priorityA =
+                    PRIORITY_RANK[
+                    ticketA.priority
+                    ] ?? 0;
+
+                const priorityB =
+                    PRIORITY_RANK[
+                    ticketB.priority
+                    ] ?? 0;
+
+                if (
+                    queueFilters.sort ===
+                    "priority_desc"
+                ) {
+                    if (
+                        priorityA !== priorityB
+                    ) {
+                        return (
+                            priorityB -
+                            priorityA
+                        );
+                    }
+
+                    return updatedB - updatedA;
+                }
+
+                if (
+                    queueFilters.sort ===
+                    "updated_asc"
+                ) {
+                    if (
+                        priorityA !== priorityB
+                    ) {
+                        return (
+                            priorityA -
+                            priorityB
+                        );
+                    }
+
+                    return updatedB - updatedA;
+                }
+
                 if (
                     queueFilters.sort ===
                     "updated_asc"
@@ -710,6 +762,14 @@ export default function TicketInboxPreview({
 
                     <option value="updated_asc">
                         Oldest updated
+                    </option>
+
+                    <option value="priority-desc">
+                        Priority - Urgent first
+                    </option>
+
+                    <option value="priority-asc">
+                        Priority - Low first
                     </option>
                 </select>
 
