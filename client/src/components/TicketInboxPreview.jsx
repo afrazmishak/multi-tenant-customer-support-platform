@@ -95,7 +95,7 @@ export default function TicketInboxPreview({
         });
 
     const [queueView, setQueueView] =
-        useState("all");
+        useState("active");
 
     const [currentUserId, setCurrentUserId,] = useState(null);
 
@@ -371,6 +371,7 @@ export default function TicketInboxPreview({
     );
 
     const queueCounts = useMemo(() => {
+        let activeTickets = 0;
         let myTickets = 0;
         let unassignedTickets = 0;
 
@@ -379,6 +380,14 @@ export default function TicketInboxPreview({
                 getAssigneeId(
                     ticket.assignedTo
                 );
+
+            const isActive =
+                ticket.status !== "resolved" &&
+                ticket.status !== "closed";
+
+            if (isActive) {
+                activeTickets += 1;
+            }
 
             if (!assignedTo) {
                 unassignedTickets += 1;
@@ -394,6 +403,7 @@ export default function TicketInboxPreview({
         }
 
         return {
+            active: activeTickets,
             all: tickets.length,
             mine: myTickets,
             unassigned: unassignedTickets,
@@ -415,6 +425,16 @@ export default function TicketInboxPreview({
                     getAssigneeId(
                         ticket.assignedTo
                     );
+
+                if (
+                    queueView === "active" &&
+                    (
+                        ticket.status === "resolved" ||
+                        ticket.status === "closed"
+                    )
+                ) {
+                    return false;
+                }
 
                 if (
                     queueView === "mine" &&
@@ -605,8 +625,25 @@ export default function TicketInboxPreview({
                 <button
                     type="button"
                     className={
+                        queueView === "active"
+                            ? "ticket-queue-view active"
+                            : "ticket-queue-view"
+                    }
+                    onClick={() => {
+                        setQueueView("active");
+                    }}
+                >
+                    <span>Active</span>
+                    <span className="ticket-queue-count">
+                        {queueCounts.active}
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    className={
                         queueView === "all"
-                            ? "ticket-queue-view acitve"
+                            ? "ticket-queue-view active"
                             : "ticket-queue-view"
                     }
                     onClick={() => {
