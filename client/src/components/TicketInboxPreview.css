@@ -279,3 +279,83 @@
 
     color: #ffffff;
 }
+
+.ticket-item {
+    position: relative;
+
+    border-left:
+        4px solid transparent;
+}
+
+.ticket-item[data-priority="urgent"] {
+    border-left-color: #dc2626;
+
+    background:
+        rgba(220, 38, 38, 0.035);
+}
+
+.ticket-item[data-priority="high"] {
+    border-left-color: #d97706;
+
+    background:
+        rgba(217, 119, 6, 0.025);
+}
+
+.ticket-item[data-priority="normal"] {
+    border-left-color: #cbd5e1;
+}
+
+.ticket-item[data-priority="low"] {
+    border-left-color: #e5e7eb;
+}
+
+.ticket-priority {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 3px 8px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ticket-priority[data-priority="urgent"] {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.ticket-priority[data-priority="high"] {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.ticket-priority[data-priority="normal"] {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.ticket-priority[data-priority="low"] {
+    background: #f8fafc;
+    color: #64748b;
+}
+
+.ticket-priority-alert {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 16px;
+    height: 16px;
+
+    margin-right: 4px;
+
+    border-radius: 50%;
+
+    background: #dc2626;
+    color: #ffffff;
+
+    font-size: 11px;
+    font-weight: 700;
+}

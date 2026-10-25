@@ -863,6 +863,7 @@ export default function TicketInboxPreview({
 
                         return (
                             <li className="ticket-item"
+                                data-priority={ticket.priority}
                                 key={ticket.id ?? ticket._id}
                             >
 
@@ -888,6 +889,13 @@ export default function TicketInboxPreview({
                                         className="ticket-priority"
                                         data-priority={ticket.priority}
                                     >
+                                        {ticket.priority === "urgent" && (
+                                            <span
+                                                className="ticket-priority-alert"
+                                                aria-hidden="true">
+                                                !
+                                            </span>
+                                        )}
                                         Priority: {" "}
                                         {formatLabel(ticket.priority)}
                                     </span>
