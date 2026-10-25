@@ -59,6 +59,83 @@ function getAssigneeId(assignedTo) {
     ) || null;
 }
 
+function getTicketAge(
+    createdAt,
+    now
+) {
+    if (!createdAt) {
+        return {
+            label: "Age unavailable",
+            level: "unknown"
+        };
+    }
+
+    const createdTime =
+        new Date(createdAt).getTime();
+
+    if (
+        Number.isNaN(createdTime)
+    ) {
+        return {
+            label: "Age unavailable",
+            level: "unknown"
+        };
+    }
+
+    const ageMs =
+        Math.max(
+            0,
+            now - createdTime
+        );
+
+    const minutes =
+        Math.floor(
+            ageMs / (1000 * 60)
+        );
+
+    const hours =
+        Math.floor(
+            ageMs,
+            (1000 * 60 * 60)
+        );
+
+    const days =
+        Math.floor(
+            ageMs /
+            (1000 * 60 * 60 * 24)
+        );
+
+    let label;
+
+    if (minutes < 60) {
+        label =
+            `${Math.max(minutes, 1)} min`;
+    } else if (hours < 24) {
+        label =
+            `${hours} ${hours === 1
+                ? "hour"
+                : "hours"}`;
+    } else {
+        label =
+            `${days} ${days === 1
+                ? "day"
+                : "days"}`;
+    }
+
+    let level = "fresh"
+
+    if (hours >= 72) {
+        level = "old";
+    } else if (hours >= 24) {
+        level = "aging"
+    }
+
+    return {
+        label,
+        level,
+    };
+}
+
 const PRIORITY_RANK =
     Object.freeze({
         low: 1,
@@ -99,7 +176,7 @@ export default function TicketInboxPreview({
 
     const [currentUserId, setCurrentUserId,] = useState(null);
 
-
+    const [now, setNow] = useState(() => Date.now());
 
     function openTicket(ticketId) {
         setSelectedTicketId(ticketId);
@@ -354,6 +431,19 @@ export default function TicketInboxPreview({
             controller.abort();
         };
     }, [workspaceSlug]);
+
+    useEffect(() => {
+        const intervalId =
+            window.setInterval(() => {
+                setNow(Date.now());
+            }, 60_000);
+
+        return () => {
+            window.clearInterval(
+                intervalId
+            );
+        };
+    }, []);
 
     const isLoading =
         ticketState.workspaceSlug !==
@@ -861,6 +951,12 @@ export default function TicketInboxPreview({
                             ticket.reference ??
                             `#${ticket.ticketNumber}`;
 
+                        const ticketAge =
+                            getTicketAge(
+                                ticket.createdAt,
+                                now
+                            );
+
                         return (
                             <li className="ticket-item"
                                 data-priority={ticket.priority}
@@ -903,6 +999,14 @@ export default function TicketInboxPreview({
                                     <span>
                                         Updated:{" "}
                                         {formatDate(ticket.updatedAt)}
+                                    </span>
+
+                                    <span className="ticket-age"
+                                        data-age-level={
+                                            ticketAge.level
+                                        }
+                                    >
+                                        Age: {ticketAge.label}
                                     </span>
                                 </div>
 
