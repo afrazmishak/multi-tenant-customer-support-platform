@@ -95,7 +95,7 @@ function getTicketAge(
 
     const hours =
         Math.floor(
-            ageMs,
+            ageMs /
             (1000 * 60 * 60)
         );
 
@@ -618,6 +618,16 @@ export default function TicketInboxPreview({
                         ticketB.updatedAt ?? 0
                     ).getTime();
 
+                const createdA =
+                    new Date(
+                        ticketA.createdAt ?? 0
+                    ).getTime();
+
+                const createdB =
+                    new Date(
+                        ticketB.createdAt ?? 0
+                    ).getTime();
+
                 const priorityA =
                     PRIORITY_RANK[
                     ticketA.priority
@@ -646,7 +656,7 @@ export default function TicketInboxPreview({
 
                 if (
                     queueFilters.sort ===
-                    "updated_asc"
+                    "priority_asc"
                 ) {
                     if (
                         priorityA !== priorityB
@@ -665,6 +675,20 @@ export default function TicketInboxPreview({
                     "updated_asc"
                 ) {
                     return updatedA - updatedB;
+                }
+
+                if (
+                    queueFilters.sort ===
+                    "created_asc"
+                ) {
+                    return createdA - createdB;
+                }
+
+                if (
+                    queueFilters.sort ===
+                    "created_desc"
+                ) {
+                    return createdB - createdA;
                 }
 
                 return updatedB - updatedA;
@@ -891,12 +915,20 @@ export default function TicketInboxPreview({
                         Oldest updated
                     </option>
 
-                    <option value="priority-desc">
+                    <option value="priority_desc">
                         Priority - Urgent first
                     </option>
 
-                    <option value="priority-asc">
+                    <option value="priority_asc">
                         Priority - Low first
+                    </option>
+
+                    <option value="created_asc">
+                        Oldest tickets first
+                    </option>
+
+                    <option value="created_desc">
+                        Newest tickets first
                     </option>
                 </select>
 
