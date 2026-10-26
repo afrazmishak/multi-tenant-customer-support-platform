@@ -136,6 +136,80 @@ function getTicketAge(
     };
 }
 
+function getTicketStaleness(
+    ticket,
+    now
+) {
+    if (
+        ticket.status === "resolved" ||
+        ticket.status === "closed"
+    ) {
+        return null;
+    }
+
+    const activityValue =
+        ticket.lastActivityAt ??
+        ticket.updatedAt ??
+        ticket.createdAt;
+
+    if (!activityValue) {
+        return null;
+    }
+
+    const activityTime =
+        new Date(
+            activityValue
+        ).getTime();
+
+    if (
+        Number.isNaN(activityTime)
+    ) {
+        return null;
+    }
+
+    const elapsedMs =
+        Math.max(
+            0,
+            now - activityTime
+        );
+
+    const hours =
+        Math.floor(
+            elapsedMs /
+            (1000 * 60 * 60)
+        );
+
+    if (hours < 24) {
+        return {
+            level: "fresh",
+            label: null,
+        };
+    }
+
+    const days =
+        Math.floor(
+            hours / 24
+        );
+
+    if (hours >= 72) {
+        return {
+            level: "very-stale",
+            label:
+                `${days} ${days === 1
+                    ? "day"
+                    : "days"}`,
+        };
+    }
+
+    return {
+        level: "stale",
+        label:
+            `${days} ${days === 1
+                ? "day"
+                : "days"}`,
+    };
+}
+
 const PRIORITY_RANK =
     Object.freeze({
         low: 1,
@@ -989,6 +1063,12 @@ export default function TicketInboxPreview({
                                 now
                             );
 
+                        const ticketStaleness =
+                            getTicketStaleness(
+                                ticket,
+                                now
+                            );
+
                         return (
                             <li className="ticket-item"
                                 data-priority={ticket.priority}
@@ -1040,6 +1120,17 @@ export default function TicketInboxPreview({
                                     >
                                         Age: {ticketAge.label}
                                     </span>
+
+                                    {ticketStaleness?.label && (
+                                        <span className="ticket-stale"
+                                            date-stale-level={
+                                                ticketStaleness.level
+                                            }
+                                        >
+                                            No activity:{" "}
+                                            {ticketStaleness.label}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="ticket-assignment">

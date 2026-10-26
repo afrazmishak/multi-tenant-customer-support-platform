@@ -391,3 +391,25 @@
     background: #f3f4f6;
     color: #6b7280;
 }
+
+.ticket-stale {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 3px 8px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.ticket-stale[data-stale-level="stale"] {
+    background: #fff7ed;
+    color: #9a3412;
+}
+
+.ticket-stale[data-stale-level="very-stale"] {
+    background: #fee2e2;
+    color: #991b1b;
+}
