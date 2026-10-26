@@ -538,6 +538,7 @@ export default function TicketInboxPreview({
         let activeTickets = 0;
         let myTickets = 0;
         let unassignedTickets = 0;
+        let staleTickets = 0;
 
         for (const ticket of tickets) {
             const assignedTo =
@@ -564,6 +565,16 @@ export default function TicketInboxPreview({
             ) {
                 myTickets += 1;
             }
+
+            const staleness =
+                getTicketStaleness(
+                    ticket,
+                    now
+                );
+
+            if (staleness?.label) {
+                staleTickets += 1;
+            }
         }
 
         return {
@@ -571,10 +582,12 @@ export default function TicketInboxPreview({
             all: tickets.length,
             mine: myTickets,
             unassigned: unassignedTickets,
+            stale: staleTickets,
         };
     }, [
         tickets,
         currentUserId,
+        now,
     ]);
 
     const visibleTickets = useMemo(() => {
@@ -589,6 +602,20 @@ export default function TicketInboxPreview({
                     getAssigneeId(
                         ticket.assignedTo
                     );
+
+                if (
+                    queueView === "stale"
+                ) {
+                    const staleness =
+                        getTicketStaleness(
+                            ticket,
+                            now
+                        );
+
+                    if (!staleness?.label) {
+                        return false;
+                    }
+                }
 
                 if (
                     queueView === "active" &&
@@ -773,6 +800,7 @@ export default function TicketInboxPreview({
         queueFilters,
         queueView,
         currentUserId,
+        now,
     ]);
 
     const error = isLoading
@@ -824,6 +852,22 @@ export default function TicketInboxPreview({
                     <span>Active</span>
                     <span className="ticket-queue-count">
                         {queueCounts.active}
+                    </span>
+                </button>
+
+                <button type="button"
+                    className={
+                        queueView === "stale"
+                            ? "ticket-queue-view active"
+                            : "ticket-queue-view"
+                    }
+                    onClick={() =>
+                        setQueueView("stale")
+                    }>
+                    <span>Stale</span>
+
+                    <span className="ticket-queue-count">
+                        {queueCounts.stale}
                     </span>
                 </button>
 
