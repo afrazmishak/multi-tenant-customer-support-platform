@@ -125,7 +125,7 @@ async function findTicketDocument({
         _id: ticketId,
         workspace: workspaceId,
     }).select(
-        "_id workspace status lastActivityAt updatedBy"
+        "_id workspace status firstResponseAt lastActivityAt updatedBy"
     );
 
     if (session) {
@@ -288,6 +288,37 @@ export async function createTicketMessage({
                     throw new AppError(
                         "Closed tickets cannot receive messages",
                         409
+                    );
+                }
+
+                if (
+                    message.type ===
+                    TICKET_MESSAGE_TYPES.PUBLIC_REPLY
+                ) {
+                    await Ticket.updateOne(
+                        {
+                            _id:
+                                normalizedTicketId,
+
+                            workspace:
+                                normalizedWorkspaceId,
+
+                            firstResponseAt: null,
+
+                            status: {
+                                $ne:
+                                    TICKET_STATUSES.CLOSED,
+                            },
+                        },
+                        {
+                            $set: {
+                                firstResponseAt:
+                                    message.createdAt,
+                            },
+                        },
+                        {
+                            session,
+                        }
                     );
                 }
 
