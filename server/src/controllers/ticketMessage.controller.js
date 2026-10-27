@@ -8,6 +8,10 @@ import {
     updateTicketMessage,
 } from "../services/ticketMessage.service.js";
 
+import {
+    getTicketById,
+} from "../services/ticket.service.js";
+
 //Importing to give this controller access from ../socket/ticketRealtime.js to give controller access to connect the HTTP controller to the real-time layer
 import {
     emitTicketActivityChanged,
@@ -90,6 +94,12 @@ export const createTicketMessageController =
                 input: req.body,
             });
 
+        const updatedTicket =
+            await getTicketById({
+                workspaceId,
+                ticketId,
+            });
+
         try {
             emitTicketMessageCreated({
                 workspaceId,
@@ -115,6 +125,18 @@ export const createTicketMessageController =
             );
         }
 
+        try {
+            emitTicketUpdated({
+                workspaceId,
+                ticket: updatedTicket,
+            });
+        } catch (error) {
+            console.error(
+                "Unable to emit ticket:updated",
+                error
+            );
+        }
+
         const responseMessage =
             message.isInternal
                 ? "Internal note created successfully"
@@ -134,7 +156,7 @@ export const listTicketMessagesController =
         const workspaceId =
             getWorkspaceIdFromRequest(req);
 
-        const actorUserId = 
+        const actorUserId =
             getAuthenticatedUserId(req);
 
         const ticketId =
@@ -152,7 +174,7 @@ export const listTicketMessagesController =
             data: {
                 currentUserId:
                     String(actorUserId),
-                    
+
                 messages:
                     result.messages,
 
