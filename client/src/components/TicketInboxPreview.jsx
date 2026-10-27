@@ -210,6 +210,23 @@ function getTicketStaleness(
     };
 }
 
+function isAwaitingFirstResponse(
+    ticket
+) {
+    if (!ticket) {
+        return false;
+    }
+
+    const isActive =
+        ticket.status !== "resolved" &&
+        ticket.status !== "closed";
+
+    return (
+        isActive &&
+        !ticket.firstResponseAt
+    );
+}
+
 const PRIORITY_RANK =
     Object.freeze({
         low: 1,
@@ -539,6 +556,7 @@ export default function TicketInboxPreview({
         let myTickets = 0;
         let unassignedTickets = 0;
         let staleTickets = 0;
+        let awaitingResponseTickets = 0;
 
         for (const ticket of tickets) {
             const assignedTo =
@@ -575,14 +593,25 @@ export default function TicketInboxPreview({
             if (staleness?.label) {
                 staleTickets += 1;
             }
+
+            if (
+                isAwaitingFirstResponse(
+                    ticket
+                )
+            ) {
+                awaitingResponseTickets += 1;
+            }
         }
 
         return {
             active: activeTickets,
             all: tickets.length,
             mine: myTickets,
-            unassigned: unassignedTickets,
+            unassigned:
+                unassignedTickets,
             stale: staleTickets,
+            awaitingResponse:
+                awaitingResponseTickets,
         };
     }, [
         tickets,
@@ -618,6 +647,16 @@ export default function TicketInboxPreview({
                 }
 
                 if (
+                    queueView ===
+                    "awaiting_response" &&
+                    !isAwaitingFirstResponse(
+                        ticket
+                    )
+                ) {
+                    return false;
+                }
+
+                if (
                     queueView === "active" &&
                     (
                         ticket.status === "resolved" ||
@@ -639,7 +678,8 @@ export default function TicketInboxPreview({
                 }
 
                 if (
-                    queueView === "unassigned" &&
+                    queueView ===
+                    "unassigned" &&
                     assignedTo
                 ) {
                     return false
@@ -852,6 +892,32 @@ export default function TicketInboxPreview({
                     <span>Active</span>
                     <span className="ticket-queue-count">
                         {queueCounts.active}
+                    </span>
+                </button>
+
+                <button
+                    type="button"
+                    className={
+                        queueView ===
+                            "awaiting_response"
+                            ? "ticket-queue-view active"
+                            : "ticket-queue-view"
+                    }
+                    onClick={() => {
+                        setQueueView(
+                            "awaiting_response"
+                        );
+                    }}
+                >
+                    <span>
+                        Awaiting Response
+                    </span>
+
+                    <span className="ticket-queue-count">
+                        {
+                            queueCounts
+                                .awaitingResponse
+                        }
                     </span>
                 </button>
 
@@ -1113,6 +1179,11 @@ export default function TicketInboxPreview({
                                 now
                             );
 
+                        const awaitingFirstResponse =
+                            isAwaitingFirstResponse(
+                                ticket
+                            );
+
                         return (
                             <li className="ticket-item"
                                 data-priority={ticket.priority}
@@ -1166,13 +1237,23 @@ export default function TicketInboxPreview({
                                     </span>
 
                                     {ticketStaleness?.label && (
-                                        <span className="ticket-stale"
-                                            date-stale-level={
+                                        <span
+                                            className="ticket-stale"
+                                            data-stale-level={
                                                 ticketStaleness.level
                                             }
                                         >
                                             No activity:{" "}
                                             {ticketStaleness.label}
+                                        </span>
+                                    )}
+
+                                    {awaitingFirstResponse && (
+                                        <span
+                                            className=
+                                            "ticket-first-response"
+                                        >
+                                            Awaiting first response
                                         </span>
                                     )}
                                 </div>

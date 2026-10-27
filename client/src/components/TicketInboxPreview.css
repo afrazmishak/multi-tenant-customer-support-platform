@@ -413,3 +413,18 @@
     background: #fee2e2;
     color: #991b1b;
 }
+
+.ticket-first-response {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 3px 8px;
+
+    border-radius: 999px;
+
+    background: #dbeafe;
+    color: #1e40af;
+
+    font-size: 12px;
+    font-weight: 600;
+}
