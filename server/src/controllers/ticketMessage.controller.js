@@ -17,6 +17,7 @@ import {
     emitTicketActivityChanged,
     emitTicketMessageCreated,
     emitTicketMessageUpdated,
+    emitTicketUpdated,
 } from "../socket/ticketRealtime.js"
 
 function getWorkspaceIdFromRequest(req) {

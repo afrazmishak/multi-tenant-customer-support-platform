@@ -61,6 +61,18 @@ export function emitTicketUpdated({
     workspaceId,
     ticket,
 }) {
+    if (!workspaceId) {
+        throw new Error(
+            "workspaceId is required to emit ticket:updated"
+        );
+    }
+
+    if (!ticket) {
+        throw new Error(
+            "ticket is required to emit ticket:updated"
+        );
+    }
+
     const io = getSocketServer();
 
     const workspaceRoom = getWorkspaceRoom(workspaceId);
