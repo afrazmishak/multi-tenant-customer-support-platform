@@ -42,10 +42,10 @@ function datesEqual(
     }
 
     const leftTime =
-        new Date(left).getTime;
+        new Date(left).getTime();
 
     const rightTime =
-        new Date(right).getTime;
+        new Date(right).getTime();
 
     if (
         Number.isNaN(leftTime) ||
@@ -91,7 +91,7 @@ async function getEarliestPublicReplies() {
 async function backfillFirstResponseAt() {
     if (!process.env.MONGODB_URI) {
         throw new Error(
-            "MONGO_URI is required"
+            "MONGODB_URI is required"
         );
     }
 
@@ -106,7 +106,7 @@ async function backfillFirstResponseAt() {
     );
 
     console.log(
-        `Connected to MongoDB databaseL ${mongoose.connection.name}`
+        `Connected to MongoDB database ${mongoose.connection.name}`
     );
 
     //STEP 1: RECONSTRUCT THE TRUE HISTORICAL FIRST PUBLIC REPLY FOR EVERY TICKET
@@ -155,11 +155,11 @@ async function backfillFirstResponseAt() {
                 ticket._id
             );
 
-        const historialFirstResponse =
+        const historicalFirstResponse =
             firstResponseMap.get(key) ??
             null;
 
-        if (historialFirstResponse) {
+        if (historicalFirstResponse) {
             ticketsWithResponses += 1;
         } else {
             ticketsWithoutResponses += 1;
@@ -168,7 +168,7 @@ async function backfillFirstResponseAt() {
         if (
             datesEqual(
                 ticket.firstResponseAt,
-                historialFirstResponse
+                historicalFirstResponse
             )
         ) {
             unchangedTickets += 1;
