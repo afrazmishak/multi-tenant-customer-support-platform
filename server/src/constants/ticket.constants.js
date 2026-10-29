@@ -45,6 +45,13 @@ export const TICKET_PRIORITY_VALUES = Object.freeze(
     Object.values(TICKET_PRIORITIES)
 );
 
+export const TICKET_PRIORITY_RANKS = Object.freeze({
+    [TICKET_PRIORITIES.LOW]: 1,
+    [TICKET_PRIORITIES.NORMAL]: 2,
+    [TICKET_PRIORITIES.HIGH]: 3,
+    [TICKET_PRIORITIES.URGENT]: 4,
+});
+
 export const TICKET_SOURCES = Object.freeze({
     INTERNAL: "internal",
     WEB: "web",

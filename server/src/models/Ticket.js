@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import {
     TICKET_LIMITS,
     TICKET_PRIORITIES,
+    TICKET_PRIORITY_RANKS,
     TICKET_PRIORITY_VALUES,
     TICKET_REFERENCE_PREFIX,
     TICKET_SOURCES,
@@ -121,6 +122,17 @@ const ticketSchema = new Schema(
                 message: "Invalid ticket priority: {VALUE}",
             },
             default: TICKET_PRIORITIES.NORMAL,
+        },
+
+        priorityRank: {
+            type: Number,
+            required: true,
+            default: () =>
+                TICKET_PRIORITY_RANKS[
+                TICKET_PRIORITIES.NORMAL
+                ],
+            min: 1,
+            max: 4,
         },
 
         source: {
@@ -272,6 +284,9 @@ ticketSchema.virtual("reference").get(function getReference() {
 ticketSchema.pre(
     "validate",
     function validateTicketIntegrity() {
+
+        this.priorityRank =
+            TICKET_PRIORITY_RANKS[this.priority];
         /*
          * Assignment integrity
          */
@@ -394,6 +409,18 @@ ticketSchema.index(
         name: "ticket_workspace_tags_filter",
     }
 );
+
+ticketSchema.index(
+    {
+        workspace: 1,
+        priorityRank: -1,
+        updatedAt: -1,
+        _id: -1,
+    },
+    {
+        name: "ticket_workspace_priority_queue"
+    }
+)
 
 const Ticket =
     mongoose.models.Ticket ||

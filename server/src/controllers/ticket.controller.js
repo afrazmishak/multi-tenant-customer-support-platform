@@ -86,8 +86,12 @@ export const listTicketsController = asyncHandler(
         const workspaceId =
             getWorkspaceIdFromRequest(req);
 
+        const actorUserId =
+            getAuthenticatedUserId(req);
+
         const result = await listTickets({
             workspaceId,
+            actorUserId,
             query: req.query,
         });
 

@@ -569,7 +569,7 @@ export function validateTicketListQuery(query = {}) {
             `Limit cannot exceed ${MAX_TICKET_LIMIT}`
         );
     }
-    
+
     const view = normalizeEnum(
         query.view ?? "active",
         "Ticket queue view",
@@ -601,17 +601,17 @@ export function validateTicketListQuery(query = {}) {
         }
     }
 
-    if (queue.priority !== undefined) {
-        if (queue.priority !== "all") {
+    if (query.priority !== undefined) {
+        if (query.priority !== "all") {
             result.priority = normalizeEnum(
-                queue.priority,
+                query.priority,
                 "Ticket priority",
                 TICKET_PRIORITY_VALUES
             );
         }
     }
 
-    if (query.source !==  undefined) {
+    if (query.source !== undefined) {
         result.source = normalizeEnum(
             query.source,
             "Ticket source",
@@ -627,6 +627,16 @@ export function validateTicketListQuery(query = {}) {
     }
 
     if (query.assignedTo !== undefined) {
+        result.assignedTo =
+            query.assignedTo === "unassigned"
+                ? "unassigned"
+                : normalizeObjectId(
+                    query.assignedTo,
+                    "Assigned user ID"
+                );
+    }
+
+    if (query.search !== undefined) {
         result.search = normalizeOptionalText(
             query.search,
             "Ticket search",
@@ -654,145 +664,38 @@ export function validateTicketListQuery(query = {}) {
         );
 
         result.sort = sort;
+        result.sortBy =
+            TICKET_QUEUE_SORT_MAP[sort].sortBy;
+        result.sortOrder = 
+            TICKET_QUEUE_SORT_MAP[sort].sortOrder;
+    } else {
+        const sortBy =
+            query.sortBy === undefined
+                ? "lastActivityAt"
+                : String(query.sortBy).trim();
 
-        
-    }
-        String(
-            
-        )
-            .trim()
-            .toLowerCase()
+        if (!SORT_FIELDS.has(sortBy)) {
+            throwValidationError(
+                "Invalid ticket sort field"
+            );
+        }
 
-    if (
-        !TICKET_QUEUE_VIEWS.has(view)
-    ) {
-        throw new AppError(
-            "Invalid ticket queue view",
-            400
+        const sortOrder = normalizeEnum(
+            query.sortOrder ?? "desc",
+            "Ticket sort order",
+            ["asc", "desc"]
         );
+
+        result.sort = null;
+        result.sortBy = sortBy;
+        result.sortOrder = sortOrder === "asc" ? 1 : -1;
     }
 
-    const rawStatus =
-        String(
-            query.status ?? "all"
-        )
-            .trim()
-            .toLowerCase();
-
-    const status =
-        rawStatus === "all"
-            ? null
-            : rawStatus;
-
-    if (
-        status &&
-        !TICKET_STATUS_VALUES.includes(
-            status
-        )
-    ) {
-        throw new AppError(
-            "Invalid ticket status filter",
-            400
+    if (!Number.isSafeInteger(result.skip)) {
+        throwValidationError(
+            "Requested ticket page is too large"
         );
     }
 
-    const rawPriority =
-        String(
-            query.priority ?? "all"
-        )
-            .trim()
-            .toLowerCase();
-
-    const priority =
-        rawPriority === "all"
-            ? null
-            : rawPriority;
-
-    if (
-        priority &&
-        !TICKET_PRIORITY_VALUES.includes(
-            priority
-        )
-    ) {
-        throw new AppError(
-            "Invalid ticket prioirty filter",
-            400
-        );
-    }
-
-    const search =
-        String(
-            query.search ?? ""
-        ).trim();
-
-    if (
-        search.length >
-        MAX_TICKET_SEARCH_LENGTH
-    ) {
-        throw new AppError(
-            `Ticket search cannot exceed ${MAX_TICKET_SEARCH_LENGTH} characters`,
-            400
-        );
-    }
-
-    const sort =
-        String(
-            query.sort ??
-            "updated_desc"
-        )
-            .trim()
-            .toLowerCase();
-
-    if (
-        !TICKET_QUEUE_SORTS.has(sort)
-    ) {
-        throw new AppError(
-            "Invalid ticket sort option",
-            400
-        );
-    }
-
-    const page =
-        Number.parseInt(
-            query.page ?? DEFAULT_TICKET_PAGE,
-            10
-        );
-
-    if (
-        !Number.isInteger(page) ||
-        page < 1
-    ) {
-        throw new AppError(
-            "Ticket page must be a positive integer",
-            400
-        );
-    }
-
-    const limit =
-        Number.parseInt(
-            query.limit ??
-            DEFAULT_TICKET_LIMIT,
-            10
-        );
-
-    if (
-        !Number.isInteger(limit) ||
-        limit < 1 ||
-        limit > MAX_TICKET_LIMIT
-    ) {
-        throw new AppError(
-            `Ticket limit must be between 1 and ${MAX_TICKET_LIMIT}`,
-            400
-        );
-    }
-
-    return {
-        view,
-        status,
-        priority,
-        search,
-        sort,
-        page,
-        limit,
-    };
+    return result;
 }

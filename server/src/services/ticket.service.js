@@ -328,44 +328,122 @@ function parseTicketNumberSearch(search) {
     return ticketNumber;
 }
 
+const TICKET_STALE_THRESHOLD_HOURS = 48;
+
+function buildQueueViewFilter(
+    view,
+    actorUserId
+) {
+    switch (view) {
+        case "active":
+            return {
+                status: {
+                    $in: [
+                        TICKET_STATUSES.OPEN,
+                        TICKET_STATUSES.IN_PROGRESS,
+                    ],
+                },
+            };
+
+        case "awaiting_response":
+            return {
+                status:
+                    TICKET_STATUSES.WAITING_ON_CUSTOMER,
+            };
+
+        case "stale": {
+            const cutoff = new Date(
+                Date.now() -
+                TICKET_STALE_THRESHOLD_HOURS *
+                60 * 60 * 1000
+            );
+
+            return {
+                status: {
+                    $in: [
+                        TICKET_STATUSES.OPEN,
+                        TICKET_STATUSES.IN_PROGRESS,
+                        TICKET_STATUSES.WAITING_ON_CUSTOMER,
+                    ],
+                },
+                lastActivityAt: {
+                    $lte: cutoff,
+                },
+            };
+        }
+
+        case "mine":
+            return {
+                assignedTo: actorUserId,
+            };
+
+        case "unassigned":
+            return {
+                assignedTo: null,
+            };
+
+        case "all":
+            return {};
+
+        default:
+            throw new AppError(
+                "Invalid ticket queue view",
+                400
+            );
+    }
+}
+
 function buildTicketFilter(
     workspaceId,
-    options
+    options,
+    actorUserId
 ) {
+    const viewFilter = buildQueueViewFilter(
+        options.view,
+        actorUserId
+    );
+
     const filter = {
-        workspace: workspaceId,
+        $and: [
+            {
+                workspace: workspaceId,
+            },
+            viewFilter,
+        ]
     };
 
+    const additionalFilters = {};
+
     if (options.status) {
-        filter.status = options.status;
+        additionalFilters.status = options.status;
     }
 
     if (options.priority) {
-        filter.priority = options.priority;
+        additionalFilters.priority = options.priority;
     }
 
     if (options.source) {
-        filter.source = options.source;
+        additionalFilters.source = options.source;
     }
 
     if (options.customerId) {
-        filter.customer = normalizeObjectId(
+        additionalFilters.customer = normalizeObjectId(
             options.customerId,
             "Customer ID"
         );
     }
 
     if (options.assignedTo === "unassigned") {
-        filter.assignedTo = null;
+        additionalFilters.assignedTo = null;
     } else if (options.assignedTo) {
-        filter.assignedTo = normalizeObjectId(
+        additionalFilters.assignedTo = normalizeObjectId(
             options.assignedTo,
             "Assigned user ID"
         );
     }
 
     if (options.tags.length > 0) {
-        filter.tags = {
+        additionalFilters.tags = {
             $all: options.tags,
         };
     }
@@ -400,12 +478,15 @@ function buildTicketFilter(
 
         if (searchedTicketNumber !== null) {
             searchConditions.push({
-                ticketNumber:
-                    searchedTicketNumber,
+                ticketNumber: searchedTicketNumber,
             });
         }
 
-        filter.$or = searchConditions;
+        additionalFilters.$or = searchConditions;
+    }
+
+    if (Object.keys(additionalFilters).length > 0) {
+        filter.$and.push(additionalFilters);
     }
 
     return filter;
@@ -442,6 +523,14 @@ function getStatusActivityType(
 }
 
 function buildTicketSort(sortBy, sortOrder) {
+    if (sortBy === "priority") {
+        return {
+            priorityRank: sortOrder,
+            updatedAt: -1,
+            _id: -1,
+        }
+    }
+    
     return {
         [sortBy]: sortOrder,
         _id: sortOrder,
@@ -642,6 +731,7 @@ export async function createTicket({
 
 export async function listTickets({
     workspaceId,
+    actorUserId,
     query = {},
 }) {
     const normalizedWorkspaceId =
@@ -650,12 +740,19 @@ export async function listTickets({
             "Workspace ID"
         );
 
+    const normalizedActorUserId =
+        normalizeObjectId(
+            actorUserId,
+            "Authenticated user ID"
+        );
+
     const options =
         validateTicketListQuery(query);
 
     const filter = buildTicketFilter(
         normalizedWorkspaceId,
-        options
+        options,
+        normalizedActorUserId
     );
 
     const sort = buildTicketSort(
@@ -699,6 +796,7 @@ export async function listTickets({
         },
 
         filters: {
+            view: options.view,
             status: options.status,
             priority: options.priority,
             source: options.source,
@@ -745,7 +843,7 @@ export async function getTicketById({
             path: "customer",
             select: "_id name email",
         })
-    .lean();
+        .lean();
 
     if (!ticket) {
         throw new AppError(
@@ -778,7 +876,7 @@ export async function updateTicket({
     const normalizedActorUserId =
         normalizeObjectId(
             actorUserId,
-            "User ID"
+            "Authenticated user ID"
         );
 
     const validatedInput =
