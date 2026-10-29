@@ -496,26 +496,15 @@ function getStatusActivityType(
     previousStatus,
     nextStatus
 ) {
-    if (
-        nextStatus ===
-        TICKET_STATUSES.CLOSED
-    ) {
+    if (nextStatus === TICKET_STATUSES.CLOSED) {
         return TICKET_ACTIVITY_TYPES.CLOSED;
     }
 
-    if (
-        nextStatus ===
-        TICKET_STATUSES.RESOLVED
-    ) {
+    if (nextStatus === TICKET_STATUSES.RESOLVED) {
         return TICKET_ACTIVITY_TYPES.RESOLVED;
     }
 
-    if (
-        previousStatus ===
-        TICKET_STATUSES.RESOLVED &&
-        nextStatus ===
-        TICKET_STATUSES.IN_PROGRESS
-    ) {
+    if (previousStatus === TICKET_STATUSES.RESOLVED && nextStatus === TICKET_STATUSES.IN_PROGRESS) {
         return TICKET_ACTIVITY_TYPES.REOPENED;
     }
 
@@ -528,9 +517,9 @@ function buildTicketSort(sortBy, sortOrder) {
             priorityRank: sortOrder,
             updatedAt: -1,
             _id: -1,
-        }
+        };
     }
-    
+
     return {
         [sortBy]: sortOrder,
         _id: sortOrder,

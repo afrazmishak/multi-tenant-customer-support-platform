@@ -17,7 +17,7 @@ async function backfillTicketPriorityRanks() {
         );
     }
 
-    await mongoose.connection(
+    await mongoose.connect(
         process.env.MONGODB_URI
     );
 
@@ -31,7 +31,7 @@ async function backfillTicketPriorityRanks() {
     const totalTickets =
         await Ticket.countDocuments();
 
-    console.log(`Ticket tickets: ${totalTickets}`);
+    console.log(`Total tickets: ${totalTickets}`);
 
     // Aggregate existing priority/rank combinations
     const groups = await Ticket.aggregate([
@@ -73,7 +73,7 @@ async function backfillTicketPriorityRanks() {
     }
 
     console.log(
-        `Ticket requiring correction: ${needsUpdate}`
+        `Tickets requiring correction: ${needsUpdate}`
     );
 
     if (!APPLY_MIGRATION) {
