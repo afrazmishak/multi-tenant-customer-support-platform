@@ -151,7 +151,7 @@ export const updateTicketController = asyncHandler(
         try {
             emitTicketActivityChanged({
                 workspaceId,
-                ticketId: req.param.ticketId,
+                ticketId: req.params.ticketId,
             });
         } catch (error) {
             console.error(
@@ -238,11 +238,6 @@ export const changeTicketStatusController =
                 input: req.body,
             });
 
-        emitTicketUpdated({
-            workspaceId,
-            ticket,
-        });
-
         try {
             emitTicketUpdated({
                 workspaceId,
@@ -261,7 +256,7 @@ export const changeTicketStatusController =
                 ticketId: req.params.ticketId,
             });
         } catch (error) {
-            console.log(
+            console.error(
                 "Unable to emit ticket:activity:changed",
                 error
             );

@@ -39,6 +39,7 @@ const ASSIGNMENT_FIELDS = new Set([
 ]);
 
 const LIST_QUERY_FIELDS = new Set([
+    "view",
     "page",
     "limit",
     "status",
@@ -48,6 +49,7 @@ const LIST_QUERY_FIELDS = new Set([
     "assignedTo",
     "search",
     "tags",
+    "sort",
     "sortBy",
     "sortOrder",
 ]);
@@ -79,6 +81,33 @@ const TICKET_QUEUE_SORTS =
         "created_asc",
         "created_desc"
     ]);
+
+const TICKET_QUEUE_SORT_MAP = {
+    updated_desc: {
+        sortBy: "updatedAt",
+        sortOrder: -1,
+    },
+    updated_asc: {
+        sortBy: "updatedAt",
+        sortOrder: 1,
+    },
+    priority_desc: {
+        sortBy: "priority",
+        sortOrder: -1,
+    },
+    priority_asc: {
+        sortBy: "priority",
+        sortOrder: 1,
+    },
+    created_desc: {
+        sortBy: "createdAt",
+        sortOrder: -1,
+    },
+    created_asc: {
+        sortBy: "createdAt",
+        sortOrder: 1,
+    },
+};
 
 const DEFAULT_TICKET_PAGE = 1;
 const DEFAULT_TICKET_LIMIT = 25;
@@ -128,8 +157,7 @@ function rejectUnknownFields(input, allowedFields) {
 
     if (unknownFields.length > 0) {
         throwValidationError(
-            `Unsupported ticket field${
-                unknownFields.length === 1 ? "" : "s"
+            `Unsupported ticket field${unknownFields.length === 1 ? "" : "s"
             }: ${unknownFields.join(", ")}`
         );
     }
@@ -373,9 +401,9 @@ export function validateCreateTicketInput(input) {
             input.assignedTo === null
                 ? null
                 : normalizeObjectId(
-                      input.assignedTo,
-                      "Assigned user ID"
-                  );
+                    input.assignedTo,
+                    "Assigned user ID"
+                );
     }
 
     return validatedInput;
@@ -453,9 +481,9 @@ export function validateTicketAssignmentInput(input) {
             input.assignedTo === null
                 ? null
                 : normalizeObjectId(
-                      input.assignedTo,
-                      "Assigned user ID"
-                  ),
+                    input.assignedTo,
+                    "Assigned user ID"
+                ),
     };
 }
 
@@ -516,10 +544,9 @@ function normalizeQueryTags(value) {
     return normalizeTags(separatedTags);
 }
 
-export function validateTicketListQuery(
-    query = {}
-) {
+export function validateTicketListQuery(query = {}) {
     assertRequestObject(query);
+
     rejectUnknownFields(
         query,
         LIST_QUERY_FIELDS
@@ -528,25 +555,33 @@ export function validateTicketListQuery(
     const page = parsePositiveInteger(
         query.page,
         "Page",
-        1
+        DEFAULT_TICKET_PAGE
     );
 
     const limit = parsePositiveInteger(
         query.limit,
         "Limit",
-        TICKET_LIMITS.DEFAULT_PAGE_SIZE
+        DEFAULT_TICKET_LIMIT
     );
 
-    if (limit > TICKET_LIMITS.MAX_PAGE_SIZE) {
+    if (limit > MAX_TICKET_LIMIT) {
         throwValidationError(
-            `Limit cannot exceed ${TICKET_LIMITS.MAX_PAGE_SIZE}`
+            `Limit cannot exceed ${MAX_TICKET_LIMIT}`
         );
     }
+    
+    const view = normalizeEnum(
+        query.view ?? "active",
+        "Ticket queue view",
+        [...TICKET_QUEUE_VIEWS]
+    );
 
     const result = {
+        view,
         page,
         limit,
         skip: (page - 1) * limit,
+
         status: null,
         priority: null,
         source: null,
@@ -554,25 +589,29 @@ export function validateTicketListQuery(
         assignedTo: null,
         search: null,
         tags: normalizeQueryTags(query.tags),
-    };
+    }
 
     if (query.status !== undefined) {
-        result.status = normalizeEnum(
-            query.status,
-            "Ticket status",
-            TICKET_STATUS_VALUES
-        );
+        if (query.status !== "all") {
+            result.status = normalizeEnum(
+                query.status,
+                "Ticket status",
+                TICKET_STATUS_VALUES
+            );
+        }
     }
 
-    if (query.priority !== undefined) {
-        result.priority = normalizeEnum(
-            query.priority,
-            "Ticket priority",
-            TICKET_PRIORITY_VALUES
-        );
+    if (queue.priority !== undefined) {
+        if (queue.priority !== "all") {
+            result.priority = normalizeEnum(
+                queue.priority,
+                "Ticket priority",
+                TICKET_PRIORITY_VALUES
+            );
+        }
     }
 
-    if (query.source !== undefined) {
+    if (query.source !==  undefined) {
         result.source = normalizeEnum(
             query.source,
             "Ticket source",
@@ -588,75 +627,50 @@ export function validateTicketListQuery(
     }
 
     if (query.assignedTo !== undefined) {
-        if (query.assignedTo === "unassigned") {
-            result.assignedTo = "unassigned";
-        } else {
-            result.assignedTo = normalizeObjectId(
-                query.assignedTo,
-                "Assigned user ID"
-            );
-        }
-    }
-
-    if (query.search !== undefined) {
         result.search = normalizeOptionalText(
             query.search,
             "Ticket search",
-            TICKET_LIMITS.SEARCH_MAX_LENGTH
+            MAX_TICKET_SEARCH_LENGTH
         );
     }
 
-    const sortBy =
-        query.sortBy === undefined
-            ? "lastActivityAt"
-            : String(query.sortBy).trim();
-
-    if (!SORT_FIELDS.has(sortBy)) {
+    if (
+        query.sort !== undefined &&
+        (
+            query.sortBy !== undefined ||
+            query.sortOrder !== undefined
+        )
+    ) {
         throwValidationError(
-            `sortBy must be one of: ${[
-                ...SORT_FIELDS,
-            ].join(", ")}`
+            "Use sort or sortBy/sortOrder, not both"
         );
     }
 
-    const rawSortOrder =
-        query.sortOrder === undefined
-            ? "desc"
-            : String(query.sortOrder)
-                  .trim()
-                  .toLowerCase();
-
-    if (!["asc", "desc"].includes(rawSortOrder)) {
-        throwValidationError(
-            "sortOrder must be either asc or desc"
+    if (query.sort !== undefined) {
+        const sort = normalizeEnum(
+            query.sort,
+            "Ticket queue sort",
+            [...TICKET_QUEUE_SORTS]
         );
+
+        result.sort = sort;
+
+        
     }
-
-    result.sortBy = sortBy;
-    result.sortOrder =
-        rawSortOrder === "asc" ? 1 : -1;
-
-    return result;
-}
-
-export function validateTicketListQuery(
-    query = {}
-) {
-    const view = 
         String(
-            query.view ?? "active"
+            
         )
             .trim()
             .toLowerCase()
 
-        if (
-            !TICKET_QUEUE_VIEWS.has(view)
-        ) {
-            throw new AppError(
-                "Invalid ticket queue view",
-                400
-            );
-        }
+    if (
+        !TICKET_QUEUE_VIEWS.has(view)
+    ) {
+        throw new AppError(
+            "Invalid ticket queue view",
+            400
+        );
+    }
 
     const rawStatus =
         String(
@@ -730,7 +744,7 @@ export function validateTicketListQuery(
             .toLowerCase();
 
     if (
-        !   TICKET_QUEUE_SORTS.has(sort)
+        !TICKET_QUEUE_SORTS.has(sort)
     ) {
         throw new AppError(
             "Invalid ticket sort option",
