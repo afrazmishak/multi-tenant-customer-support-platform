@@ -34,7 +34,7 @@ async function analyzeQuery(name, filter, sort) {
         returned: stats.nReturned,
         documentsExamined: stats.totalDocsExamined,
         keysExamined: stats.totalKeysExamined,
-        executionTimsMs: stats.executionTimsMillis,
+        executionTimeMs: stats.executionTimsMillis,
     });
 
     console.log(
