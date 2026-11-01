@@ -21,7 +21,7 @@ const STATUSES = [
     "closed",
 ];
 
-const PRIORITY = [
+const PRIORITIES = [
     "low",
     "normal",
     "high",
@@ -46,7 +46,7 @@ const agentId =
 
 function createBenchmarkTicket(number) {
     const priority =
-        PRIORITIES[number % PRIORITY.length];
+        PRIORITIES[number % PRIORITIES.length];
 
     const status = 
         STATUSES[number % STATUSES.length];
@@ -128,7 +128,7 @@ async function main() {
         );
     }
 
-    await mongoose.connection(uri, {
+    await mongoose.connect(uri, {
         autoIndex: false,
     });
 
