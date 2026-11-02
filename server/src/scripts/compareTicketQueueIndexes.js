@@ -1,8 +1,8 @@
+
 import "dotenv/config";
 import mongoose from "mongoose";
 
 import Ticket from "../models/Ticket.js";
-import { stat } from "node:fs";
 
 const DATABASE_NAME = "customer_support_benchmark";
 const RUN_ID = "phase39-ticket-queue-v1";
@@ -13,39 +13,32 @@ const INDEXES = {
     activity: "ticket_workspace_activity_queue",
 };
 
-async function runComparison(
+async function compareQuery(
     collection,
     label,
     filter,
     sort,
     indexNames
 ) {
-    console.log(`\n${label}`);
+    console.log(`\n--- ${label} ---`);
 
     for (const indexName of indexNames) {
-        try {
-            const result = await collection
-                .find(filter)
-                .sort(sort)
-                .limit(25)
-                .hint(indexName)
-                .explain("executionStats");
+        const explanation = await collection
+            .find(filter)
+            .sort(sort)
+            .limit(25)
+            .hint(indexName)
+            .explain("executionStats");
 
-            const stats = result.executionStats;
+        const stats = explanation.executionStats;
 
-            console.log({
-                index: indexName,
-                returned: stats.nReturned,
-                documentsExamined: stats.totalDocsExamined,
-                keysExamined: stats.totalKeysExamined,
-                executionTimeMs: stats.executionTimeMillis,
-            });
-        } catch (error) {
-            console.log({
-                index: indexName,
-                error: error.message,
-            });
-        }
+        console.log({
+            index: indexName,
+            returned: stats.nReturned,
+            documentsExamined: stats.totalDocsExamined,
+            keysExamined: stats.totalKeysExamined,
+            executionTimeMs: stats.executionTimeMillis,
+        });
     }
 }
 
@@ -64,7 +57,7 @@ async function main() {
 
     if (mongoose.connection.name !== DATABASE_NAME) {
         throw new Error(
-            `Wrong database: ${mongoose.connection.name}`
+            `Refusing database: ${mongoose.connection.name}`
         );
     }
 
@@ -76,7 +69,7 @@ async function main() {
 
     if (!sample) {
         throw new Error(
-            "Benchmark dataset was not found"
+            "Benchmark dataset not found"
         );
     }
 
@@ -89,7 +82,7 @@ async function main() {
 
     if (total !== 10_000) {
         throw new Error(
-            `Expected 10000 benchmark tickets, found ${total}`
+            `Expected 10000 tickets, found ${total}`
         );
     }
 
@@ -101,15 +94,17 @@ async function main() {
         },
     };
 
-    await runComparison(
+    const prioritySort = {
+        priorityRank: -1,
+        updatedAt: -1,
+        _id: -1,
+    };
+
+    await compareQuery(
         collection,
         "Active tickets - priority descending",
         activeFilter,
-        {
-            priorityRank: -1,
-            updatedAt: -1,
-            _id: -1,
-        },
+        prioritySort,
         [
             INDEXES.priority,
             INDEXES.statusPriority,
@@ -123,7 +118,6 @@ async function main() {
     const staleFilter = {
         workspace,
         benchmarkRun: RUN_ID,
-
         status: {
             $in: [
                 "open",
@@ -131,31 +125,38 @@ async function main() {
                 "waiting_on_customer",
             ],
         },
-
         lastActivityAt: {
             $lte: staleCutoff,
         },
     };
 
-    await runComparison(
+    const activitySort = {
+        lastActivityAt: -1,
+        _id: -1,
+    };
+
+    await compareQuery(
         collection,
         "Stale tickets - activity descending",
         staleFilter,
-        {
-            lastActivityAt: -1,
-            _id: -1
-        },
+        activitySort,
         [
             INDEXES.priority,
             INDEXES.activity,
         ]
     );
+
+    console.log("\nIndex comparison completed.");
 }
 
 try {
     await main();
 } catch (error) {
-    console.error("Comparison failed:", error);
+    console.error(
+        "Index comparison failed:",
+        error
+    );
+
     process.exitCode = 1;
 } finally {
     await mongoose.disconnect();
