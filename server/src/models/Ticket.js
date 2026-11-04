@@ -422,6 +422,19 @@ ticketSchema.index(
     }
 )
 
+ticketSchema.index(
+    {
+        workspace: 1,
+        status: 1,
+        priorityRank: -1,
+        updatedAt: -1,
+        _id: -1,
+    },
+    {
+        name: "ticket_workspace_status_priority_queue",
+    }
+);
+
 const Ticket =
     mongoose.models.Ticket ||
     mongoose.model("Ticket", ticketSchema);
