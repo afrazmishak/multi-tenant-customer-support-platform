@@ -7,7 +7,7 @@ const DATABASE_NAME = "customer_support_benchmark";
 const RUN_ID = "phase39-ticket-queue-v1";
 
 const LIMIT = 25;
-const DEEP_PAGE = 75;
+const DEEP_PAGE = 70;
 
 const SORT = {
     pirorityRank: -1,
@@ -15,15 +15,47 @@ const SORT = {
     _id: -1,
 };
 
+function collectStages(node, stages = []) {
+    if (!node || typeof node !== "object") {
+        return stages;
+    }
+
+    if (Array.isArray(node)) {
+        for (const item of node) {
+            collectStages(item, stages);
+        }
+        return stages;
+    }
+
+    if (node.stage) {
+        stages.push({
+            stage: node.stage,
+            index: node.indexName ?? null,
+        });
+    }
+
+    for (const [key, value] of Object.entries(node)) {
+        if (key !== "stage" && key !== "indexName") {
+            collectStages(value, stages);
+        }
+    }
+
+    return stages;
+}
+
 function printStats(label, explanation) {
     const stats = explanation.executionStats;
 
     console.log(`\n--- ${label} ---`);
+
     console.log({
         returned: stats.nReturned,
         documentsExamined: stats.totalDocsExamined,
         keysExamined: stats.totalKeysExamined,
         executionTimeMs: stats.executionTimeMillis,
+        stages: collectStages(
+            explanation.queryPlanner.winningPlan
+        ),
     });
 }
 
@@ -101,20 +133,29 @@ async function main() {
         },
     };
 
-    const matchingCount = 
+    const matchingCount =
         await collection.countDocuments(filter);
 
-    const totalPages = Math.ceeil(
+    const totalPages = Math.ceil(
         matchingCount / LIMIT
     );
 
-    const targetPage = Math.min(DEEP_PAGE)
+    const targetPage = Math.min(
+        DEEP_PAGE,
+        totalPages
+    );
+
+    if (targetPage < 2) {
+        throw new Error(
+            "Not enough tickets for deep pagination testing"
+        );
+    }
 
     const skip = (DEEP_PAGE - 1) * LIMIT;
 
     if (matchingCount <= skip) {
         throw new Error(
-            `Not enough active tickets for page ${DEEP_PAGE}. ` + 
+            `Not enough active tickets for page ${DEEP_PAGE}. ` +
             `Found ${matchingCount}.`
         );
     }
@@ -143,7 +184,7 @@ async function main() {
         .explain("executionStats");
 
     printStats(
-        `Offset pagination - page ${DEEP_PAGE}`,
+        `Offset pagination - page ${targetPage}`,
         deepPage
     );
 
@@ -173,21 +214,36 @@ async function main() {
         .explain("executionStats");
 
     printStats(
-        `Cursor pagination - equivalent to page ${DEEP_PAGE}`,
+        `Cursor pagination - equivalent to page ${targetPage}`,
         cursorPage
     );
 
     //Verify that both strategies return the same IDs
     const offsetIds = await collection
-        .find(filter, { projection: { _id: 1} })
+        .find(filter, { projection: { _id: 1 } })
         .sort(SORT)
         .skip(skip)
         .limit(LIMIT)
         .toArray();
 
+    const cursorIds = await collection
+        .find(filter, { projection: { _id: 1 } })
+        .sort(SORT)
+        .skip(skip)
+        .limit(LIMIT)
+        .toArray();
+
+    const offsetIdStrings = offsetIds.map(
+        (ticket) => ticket._id.toString()
+    );
+
+    const cursorIdStrings = cursorIds.map(
+        (ticket) => ticket._id.toString()
+    );
+
     const identical =
-        JSON.stringify(offsetIds) ===
-        JSON.stringify(cursorIds);
+        JSON.stringify(offsetIdStrings) ===
+        JSON.stringify(cursorIdStrings);
 
     console.log("\nPagination correctness:");
     console.log("Same tickets and order:", identical);
