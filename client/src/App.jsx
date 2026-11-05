@@ -12,45 +12,52 @@ import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import PublicOnlyRoute from "./routes/PublicOnlyRoute.jsx";
 import WorkspaceRedirect from "./routes/WorkspaceRedirect.jsx";
 import WorkspaceSocketConnection from "./routes/WorkspaceSocketConnection.jsx";
+import TicketQueuePage from "./pages/TicketQueuePage.jsx";
 
 export default function App() {
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={<Navigate to="/app" replace />}
-      />
-
-      <Route element={<PublicOnlyRoute />}>
+    <>
+      <Routes>
         <Route
-          path="/login"
-          element={<LoginPage />}
+          path="/"
+          element={<Navigate to="/app" replace />}
         />
 
-        <Route
-          path="/register"
-          element={<RegisterWorkspacePage />}
-        />
-      </Route>
-
-      <Route element={<ProtectedRoute />}>
-        <Route
-          path="/app"
-          element={<WorkspaceRedirect />}
-        />
-
-        <Route element={<WorkspaceSocketConnection />}>
+        <Route element={<PublicOnlyRoute />}>
           <Route
-            path="/app/:workspaceSlug"
-            element={<DashboardPage />}
+            path="/login"
+            element={<LoginPage />}
+          />
+
+          <Route
+            path="/register"
+            element={<RegisterWorkspacePage />}
           />
         </Route>
-      </Route>
 
-      <Route
-        path="*"
-        element={<NotFoundPage />}
+        <Route element={<ProtectedRoute />}>
+          <Route
+            path="/app"
+            element={<WorkspaceRedirect />}
+          />
+
+          <Route element={<WorkspaceSocketConnection />}>
+            <Route
+              path="/app/:workspaceSlug"
+              element={<DashboardPage />}
+            />
+          </Route>
+        </Route>
+
+        <Route
+          path="*"
+          element={<NotFoundPage />}
+        />
+      </Routes>
+
+      <TicketQueuePage
+        workspaceSlug="YOUR_ACTUAL_WORKSPACE_SLUG"
       />
-    </Routes>
+    </>
   );
 }

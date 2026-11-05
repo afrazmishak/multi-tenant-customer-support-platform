@@ -1,0 +1,166 @@
+
+.ticket-queue {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    color: #e5e7eb;
+}
+
+.ticket-queue__header {
+    margin-bottom: 28px;
+}
+
+.ticket-queue__header h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+}
+
+.ticket-queue__header p {
+    margin: 0;
+    color: #94a3b8;
+}
+
+.ticket-queue__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.ticket-tab {
+    padding: 10px 14px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    color: #cbd5e1;
+    cursor: pointer;
+}
+
+.ticket-tab:hover {
+    background: #334155;
+}
+
+.ticket-tab--active {
+    color: #fff;
+    background: #2563eb;
+    border-color: #2563eb;
+}
+
+.ticket-queue__content {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.ticket-table-wrapper {
+    overflow-x: auto;
+}
+
+.ticket-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.ticket-table th,
+.ticket-table td {
+    padding: 16px;
+    border-bottom: 1px solid #1e293b;
+}
+
+.ticket-table th {
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.ticket-table td {
+    font-size: 14px;
+}
+
+.ticket-table tbody tr:hover {
+    background: #1e293b;
+}
+
+.ticket-priority {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    text-transform: capitalize;
+}
+
+.ticket-priority--urgent {
+    color: #fecaca;
+    background: #7f1d1d;
+}
+
+.ticket-priority--high {
+    color: #fed7aa;
+    background: #7c2d12;
+}
+
+.ticket-priority--normal {
+    color: #bfdbfe;
+    background: #1e3a8a;
+}
+
+.ticket-priority--low {
+    color: #bbf7d0;
+    background: #14532d;
+}
+
+.ticket-state,
+.ticket-error {
+    padding: 32px;
+    text-align: center;
+}
+
+.ticket-error {
+    color: #fca5a5;
+}
+
+.ticket-queue__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 16px;
+}
+
+.ticket-queue__footer p {
+    margin: 0;
+    color: #94a3b8;
+}
+
+.ticket-pagination {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ticket-pagination button {
+    padding: 8px 12px;
+    background: #1e293b;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+}
+
+.ticket-pagination button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+    .ticket-queue {
+        padding: 20px 12px;
+    }
+
+    .ticket-table {
+        min-width: 760px;
+    }
+}

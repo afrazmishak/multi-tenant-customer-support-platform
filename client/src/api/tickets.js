@@ -1,6 +1,6 @@
 const API_BASE_URL = 
-    import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:5000";
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000/api";
 
 export async function fetchTickets({
     workspaceSlug,
@@ -36,7 +36,7 @@ export async function fetchTickets({
     }
 
     const url = 
-        `${API_BASE_URL}/api/workspaces` +
+        `${API_BASE_URL}/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/tickets?` +
         params.toString();
 
