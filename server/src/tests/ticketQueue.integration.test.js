@@ -194,23 +194,22 @@ test("Another workspace cannot list workspace A tickets", async () => {
         },
     });
 
-    console.log(
-        "\nCross-workspace result:",
-        JSON.stringify(result, null, 2)
-    );
-
-    assert.ok(
-        result && typeof result === "object",
-        "listTickets() must return a result object"
-    );
-
     assert.ok(
         Array.isArray(result.tickets),
-        "result.tickets must be an array"
-    )
+        "Expected tickets to be an array"
+    );
 
-    assert.equal(result.ticket.length, 0);
-    assert.equal(result.pagination.totalTickets, 0);
+    assert.equal(result.tickets.length, 0);
+
+    assert.equal(
+        result.pagination.totalTickets,
+        0
+    );
+
+    assert.equal(
+        result.pagination.totalPages,
+        0
+    );
 });
 
 //Test 6 - Cross workspace ticket access
