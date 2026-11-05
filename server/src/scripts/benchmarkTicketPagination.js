@@ -171,9 +171,43 @@ async function main() {
         .sort(SORT)
         .skip(0)
         .limit(LIMIT)
+        .hint("ticket_workspace_status_priority_queue")
         .explain("executionStats");
 
     printStats("Offset pagination - page 1", firstPage);
+
+    console.log("\n--- Index selection comparison ---");
+
+    const indexStrategies = [
+        {
+            name: "Automatic planner",
+            hint: null,
+        },
+        {
+            name: "Status-priority index",
+            hint: "ticket_workspace_status_priority_queue",
+        },
+        {
+            name: "Priority index",
+            hint: "ticket_workspace_priority_queue"
+        },
+    ];
+
+    for (const strategy of indexStrategies) {
+        let query = collection
+            .find(filter)
+            .sort(SORT)
+            .limit(LIMIT);
+
+        if (strategy.hint) {
+            query = query.hint(strategy.hint);
+        }
+
+        const explanation =
+            await query.explain("executionStats");
+
+        printStats(strategy.name, explanation);
+    }
 
     //Test 2: Deep page using offset pagination
     const deepPage = await collection
@@ -181,6 +215,7 @@ async function main() {
         .sort(SORT)
         .skip(skip)
         .limit(LIMIT)
+        .hint("ticket_workspace_status_priority_queue")
         .explain("executionStats");
 
     printStats(
