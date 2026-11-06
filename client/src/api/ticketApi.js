@@ -1,11 +1,14 @@
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = (
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000/api"
+).replace(/\/+$/, "");
 
 export async function getWorkspaceTicketsRequest(
     workspaceSlug,
     { signal } = {}
 ) {
     const url =
-        `${API_BASE_URL}/api/workspaces/` +
+        `${API_BASE_URL}/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/tickets`;
 
     const response = await fetch(url, {
@@ -26,14 +29,17 @@ export async function getWorkspaceTicketsRequest(
     return result;
 }
 
-
 export async function getTicketByIdRequest(
     workspaceSlug,
     ticketId,
     { signal } = {}
 ) {
+    if (!workspaceSlug || !ticketId) {
+        throw new Error("Workspace slug and ticket ID are required");
+    }
+
     const url =
-        `${API_BASE_URL}/api/workspaces/` +
+        `${API_BASE_URL}/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/tickets/` +
         `${encodeURIComponent(ticketId)}`;
 
@@ -48,6 +54,7 @@ export async function getTicketByIdRequest(
     if (!response.ok) {
         throw new Error(
             result?.message ||
+            result?.error?.message ||
             `Unable to load ticket (${response.status})`
         );
     }
@@ -63,7 +70,7 @@ export async function getTicketActivitiesRequest(
     } = {}
 ) {
     const url =
-        `${API_BASE_URL}/api/workspaces/` +
+        `${API_BASE_URL}/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/tickets/` +
         `${encodeURIComponent(ticketId)}/activities`;
 
@@ -91,7 +98,7 @@ export async function updateTicketAssignmentRequest(
     input
 ) {
     const url =
-        `${API_BASE_URL}/api/workspaces/` +
+        `${API_BASE_URL}/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/tickets/` +
         `${encodeURIComponent(ticketId)}/assignment`;
 
@@ -122,7 +129,7 @@ export async function updateTicketStatusRequest(
     input
 ) {
     const url =
-        `${API_BASE_URL}/api/workspaces/` +
+        `${API_BASE_URL}/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/tickets/` +
         `${encodeURIComponent(ticketId)}/status`;
 
@@ -153,7 +160,7 @@ export async function updateTicketRequest(
     input
 ) {
     const url =
-        `${API_BASE_URL}/api/workspaces/` +
+        `${API_BASE_URL}/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/tickets/` +
         `${encodeURIComponent(ticketId)}`;
 
@@ -181,16 +188,21 @@ export async function updateTicketRequest(
 
 export async function getWorkspaceContextRequest(
     workspaceSlug,
-    options = {}
+    { signal } = {}
 ) {
+    if (!workspaceSlug) {
+        throw new Error("Workspace slug is required");
+    }
+
     const url =
-        `${API_BASE_URL}/api/workspaces/` +
+        `${API_BASE_URL}/workspaces/` +
         `${encodeURIComponent(workspaceSlug)}/context`;
 
     const response = await fetch(url, {
         method: "GET",
         credentials: "include",
-        signal: options.signal,
+        signal,
+
     });
 
     const result = await response.json();
@@ -198,6 +210,7 @@ export async function getWorkspaceContextRequest(
     if (!response.ok) {
         throw new Error(
             result?.message ||
+            result?.error?.message ||
             `Unable to load workspace context (${response.status})`
         );
     }
