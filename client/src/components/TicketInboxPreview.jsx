@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
     socket,
@@ -227,14 +227,6 @@ function isAwaitingFirstResponse(
     );
 }
 
-const PRIORITY_RANK =
-    Object.freeze({
-        low: 1,
-        normal: 2,
-        high: 3,
-        urgent: 4,
-    });
-
 export default function TicketInboxPreview({
     workspaceSlug,
 }) {
@@ -244,8 +236,9 @@ export default function TicketInboxPreview({
     } = useWorkspacePresence();
 
     const [ticketState, setTicketState] = useState({
-        workspaceSlug: null,
+        requestKey: null,
         tickets: [],
+        pagination: null,
         error: null,
     });
 
@@ -265,9 +258,29 @@ export default function TicketInboxPreview({
     const [queueView, setQueueView] =
         useState("active");
 
+    const [page, setPage] = useState(1);
+
+    const [refreshVersion, setRefreshVersion] = useState(0);
+
+    function changeQueueView(nextView) {
+        setQueueView(nextView);
+        setPage(1);
+    }
+
     const [currentUserId, setCurrentUserId,] = useState(null);
 
     const [now, setNow] = useState(() => Date.now());
+
+    const requestKey = JSON.stringify({
+        workspaceSlug,
+        view: queueView,
+        page,
+        search: queueFilters.search,
+        status: queueFilters.status,
+        priority: queueFilters.priority,
+        sort: queueFilters.sort,
+        refreshVersion,
+    });
 
     function openTicket(ticketId) {
         setSelectedTicketId(ticketId);
@@ -278,7 +291,7 @@ export default function TicketInboxPreview({
     }
 
     useEffect(() => {
-        // load tickets through HTTP
+        // Load tickets through HTTP
         if (!workspaceSlug) {
             return;
         }
@@ -293,22 +306,31 @@ export default function TicketInboxPreview({
                         workspaceSlug,
                         {
                             signal: controller.signal,
+                            view: queueView,
+                            page,
+                            limit: 25,
+                            search: queueFilters.search,
+                            status: queueFilters.status,
+                            priority: queueFilters.priority,
+                            sort: queueFilters.sort,
                         }
                     );
 
                 const tickets = result?.data?.tickets;
+                const pagination = result?.data?.pagination;
 
-                if (!Array.isArray(tickets)) {
+                if (!Array.isArray(tickets) ||
+                    !pagination) {
                     throw new Error(
-                        "Unexpected ticket API response: " +
-                        "data.tickets must be an array"
+                        "Unexpected ticket queue response"
                     );
                 }
 
                 if (!cancelled) {
                     setTicketState({
-                        workspaceSlug,
+                        requestKey,
                         tickets,
+                        pagination,
                         error: null,
                     });
                 }
@@ -321,8 +343,9 @@ export default function TicketInboxPreview({
                 }
 
                 setTicketState({
-                    workspaceSlug,
+                    requestKey,
                     tickets: [],
+                    pagination: null,
                     error: error.message,
                 });
             }
@@ -334,135 +357,58 @@ export default function TicketInboxPreview({
             cancelled = true;
             controller.abort();
         };
-    }, [workspaceSlug]);
+    }, [
+        workspaceSlug,
+        queueView,
+        page,
+        queueFilters.search,
+        queueFilters.status,
+        queueFilters.priority,
+        queueFilters.sort,
+        refreshVersion,
+        requestKey,
+    ]);
 
     useEffect(() => {
         if (!workspaceSlug) {
             return;
         }
 
-        function handleTicketCreated(payload) {
-            const createdTicket =
-                payload?.ticket;
+        let refreshTimeout = null;
 
-            if (!createdTicket) {
-                return;
+        function scheduleQueueRefresh() {
+            if (refreshTimeout !== null) {
+                clearTimeout(refreshTimeout);
             }
 
-            const createdTicketId =
-                String(
-                    createdTicket.id ??
-                    createdTicket._id ??
-                    ""
+            refreshTimeout = setTimeout(() => {
+                refreshTimeout = null;
+
+                setRefreshVersion(
+                    (previous) => previous + 1
                 );
-
-            if (!createdTicketId) {
-                return;
-            }
-
-            setTicketState((previous) => {
-                if (
-                    previous.workspaceSlug !==
-                    workspaceSlug
-                ) {
-                    return previous;
-                }
-
-                const alreadyExists =
-                    previous.tickets.some(
-                        (ticket) =>
-                            String(
-                                ticket.id ??
-                                ticket._id ??
-                                ""
-                            ) === createdTicketId
-                    );
-
-                if (alreadyExists) {
-                    return previous;
-                }
-
-                return {
-                    ...previous,
-
-                    tickets: [
-                        createdTicket,
-                        ...previous.tickets,
-                    ],
-                };
-            });
+            }, 250);
         }
 
-        function handleTicketUpdated(payload) {
-            const updatedTicket =
-                payload?.ticket;
-
-            if (!updatedTicket) {
-                return;
-            }
-
-            const updatedTicketId =
-                String(
-                    updatedTicket.id ??
-                    updatedTicket._id ??
-                    ""
-                );
-
-            if (!updatedTicketId) {
-                return;
-            }
-
-            setTicketState((previous) => {
-                if (
-                    previous.workspaceSlug !==
-                    workspaceSlug
-                ) {
-                    return previous;
-                }
-
-                return {
-                    ...previous,
-
-                    tickets:
-                        previous.tickets.map(
-                            (ticket) => {
-                                const ticketId =
-                                    String(
-                                        ticket.id ??
-                                        ticket._id ??
-                                        ""
-                                    );
-
-                                return ticketId ===
-                                    updatedTicketId
-                                    ? updatedTicket
-                                    : ticket;
-                            }
-                        ),
-                };
-            });
-        }
-
-        socket.on(
-            "ticket:updated",
-            handleTicketUpdated
-        );
-
-        socket.on(
+        const events = [
             "ticket:created",
-            handleTicketCreated
-        );
+            "ticket:updated",
+            "ticket:message:created",
+            "ticket:activity:changed",
+        ];
+
+        events.forEach((event) => {
+            socket.on(event, scheduleQueueRefresh);
+        });
 
         return () => {
-            socket.off(
-                "ticket:updated",
-                handleTicketUpdated
-            );
+            if (refreshTimeout !== null) {
+                clearTimeout(refreshTimeout);
+            }
 
-            socket.off(
-                "ticket:created",
-                handleTicketCreated
-            );
+            events.forEach((event) => {
+                socket.off(event, scheduleQueueRefresh);
+            });
         };
     }, [workspaceSlug]);
 
@@ -537,311 +483,25 @@ export default function TicketInboxPreview({
     }, []);
 
     const isLoading =
-        ticketState.workspaceSlug !==
-        workspaceSlug;
+        ticketState.requestKey !== requestKey;
 
-    const tickets = useMemo(
-        () =>
-            isLoading
-                ? []
-                : ticketState.tickets,
-        [
-            isLoading,
-            ticketState.tickets
-        ]
-    );
+    const tickets = isLoading
+        ? []
+        : ticketState.tickets;
 
-    const queueCounts = useMemo(() => {
-        let activeTickets = 0;
-        let myTickets = 0;
-        let unassignedTickets = 0;
-        let staleTickets = 0;
-        let awaitingResponseTickets = 0;
+    const pagination = isLoading
+        ? null
+        : ticketState.pagination;
 
-        for (const ticket of tickets) {
-            const assignedTo =
-                getAssigneeId(
-                    ticket.assignedTo
-                );
-
-            const isActive =
-                ticket.status !== "resolved" &&
-                ticket.status !== "closed";
-
-            if (isActive) {
-                activeTickets += 1;
-            }
-
-            if (!assignedTo) {
-                unassignedTickets += 1;
-            }
-
-            if (
-                currentUserId &&
-                assignedTo ===
-                String(currentUserId)
-            ) {
-                myTickets += 1;
-            }
-
-            const staleness =
-                getTicketStaleness(
-                    ticket,
-                    now
-                );
-
-            if (staleness?.label) {
-                staleTickets += 1;
-            }
-
-            if (
-                isAwaitingFirstResponse(
-                    ticket
-                )
-            ) {
-                awaitingResponseTickets += 1;
-            }
+    function getQueueCount(view) {
+        if (queueView !== view) {
+            return "—";
         }
 
-        return {
-            active: activeTickets,
-            all: tickets.length,
-            mine: myTickets,
-            unassigned:
-                unassignedTickets,
-            stale: staleTickets,
-            awaitingResponse:
-                awaitingResponseTickets,
-        };
-    }, [
-        tickets,
-        currentUserId,
-        now,
-    ]);
+        return pagination?.totalTickets ?? "—";
+    }
 
-    const visibleTickets = useMemo(() => {
-        const search =
-            queueFilters.search
-                .trim()
-                .toLowerCase();
-
-        const filteredTickets =
-            tickets.filter((ticket) => {
-                const assignedTo =
-                    getAssigneeId(
-                        ticket.assignedTo
-                    );
-
-                if (
-                    queueView === "stale"
-                ) {
-                    const staleness =
-                        getTicketStaleness(
-                            ticket,
-                            now
-                        );
-
-                    if (!staleness?.label) {
-                        return false;
-                    }
-                }
-
-                if (
-                    queueView ===
-                    "awaiting_response" &&
-                    !isAwaitingFirstResponse(
-                        ticket
-                    )
-                ) {
-                    return false;
-                }
-
-                if (
-                    queueView === "active" &&
-                    (
-                        ticket.status === "resolved" ||
-                        ticket.status === "closed"
-                    )
-                ) {
-                    return false;
-                }
-
-                if (
-                    queueView === "mine" &&
-                    (
-                        !currentUserId ||
-                        assignedTo !==
-                        String(currentUserId)
-                    )
-                ) {
-                    return false;
-                }
-
-                if (
-                    queueView ===
-                    "unassigned" &&
-                    assignedTo
-                ) {
-                    return false
-                }
-
-                if (
-                    queueFilters.status !== "all" &&
-                    ticket.status !==
-                    queueFilters.status
-                ) {
-                    return false;
-                }
-
-                if (
-                    queueFilters.priority !== "all" &&
-                    ticket.priority !==
-                    queueFilters.priority
-                ) {
-                    return false;
-                }
-
-                if (!search) {
-                    return true;
-                }
-
-                const reference =
-                    String(
-                        ticket.reference ??
-                        ticket.ticketNumber ??
-                        ""
-                    ).toLowerCase();
-
-                const subject =
-                    String(
-                        ticket.subject ?? ""
-                    ).toLowerCase();
-
-                const category =
-                    String(
-                        ticket.category ?? ""
-                    ).toLowerCase();
-
-                const tags =
-                    Array.isArray(ticket.tags)
-                        ? ticket.tags.join(" ")
-                        : "";
-
-                const customerName =
-                    typeof ticket.customer ===
-                        "object"
-                        ? String(
-                            ticket.customer?.name ??
-                            ""
-                        ).toLowerCase()
-                        : "";
-
-                return [
-                    reference,
-                    subject,
-                    category,
-                    tags.toLowerCase(),
-                    customerName,
-                ].some((value) =>
-                    value.includes(search)
-                );
-            });
-
-        return [...filteredTickets].sort(
-            (ticketA, ticketB) => {
-                const updatedA =
-                    new Date(
-                        ticketA.updatedAt ?? 0
-                    ).getTime();
-
-                const updatedB =
-                    new Date(
-                        ticketB.updatedAt ?? 0
-                    ).getTime();
-
-                const createdA =
-                    new Date(
-                        ticketA.createdAt ?? 0
-                    ).getTime();
-
-                const createdB =
-                    new Date(
-                        ticketB.createdAt ?? 0
-                    ).getTime();
-
-                const priorityA =
-                    PRIORITY_RANK[
-                    ticketA.priority
-                    ] ?? 0;
-
-                const priorityB =
-                    PRIORITY_RANK[
-                    ticketB.priority
-                    ] ?? 0;
-
-                if (
-                    queueFilters.sort ===
-                    "priority_desc"
-                ) {
-                    if (
-                        priorityA !== priorityB
-                    ) {
-                        return (
-                            priorityB -
-                            priorityA
-                        );
-                    }
-
-                    return updatedB - updatedA;
-                }
-
-                if (
-                    queueFilters.sort ===
-                    "priority_asc"
-                ) {
-                    if (
-                        priorityA !== priorityB
-                    ) {
-                        return (
-                            priorityA -
-                            priorityB
-                        );
-                    }
-
-                    return updatedB - updatedA;
-                }
-
-                if (
-                    queueFilters.sort ===
-                    "updated_asc"
-                ) {
-                    return updatedA - updatedB;
-                }
-
-                if (
-                    queueFilters.sort ===
-                    "created_asc"
-                ) {
-                    return createdA - createdB;
-                }
-
-                if (
-                    queueFilters.sort ===
-                    "created_desc"
-                ) {
-                    return createdB - createdA;
-                }
-
-                return updatedB - updatedA;
-            }
-        );
-    }, [
-        tickets,
-        queueFilters,
-        queueView,
-        currentUserId,
-        now,
-    ]);
+    const visibleTickets = tickets;
 
     const error = isLoading
         ? null
@@ -871,8 +531,7 @@ export default function TicketInboxPreview({
 
                 {!isLoading && !error && (
                     <span className="ticket-count">
-                        {visibleTickets.length} of {" "}
-                        {tickets.length} displayed
+                        {tickets.length} of {pagination?.totalTickets ?? 0} displayed
                     </span>
                 )}
             </header>
@@ -885,13 +544,11 @@ export default function TicketInboxPreview({
                             ? "ticket-queue-view active"
                             : "ticket-queue-view"
                     }
-                    onClick={() => {
-                        setQueueView("active");
-                    }}
+                    onClick={() => changeQueueView("active")}
                 >
                     <span>Active</span>
                     <span className="ticket-queue-count">
-                        {queueCounts.active}
+                        {getQueueCount("active")}
                     </span>
                 </button>
 
@@ -903,21 +560,14 @@ export default function TicketInboxPreview({
                             ? "ticket-queue-view active"
                             : "ticket-queue-view"
                     }
-                    onClick={() => {
-                        setQueueView(
-                            "awaiting_response"
-                        );
-                    }}
+                    onClick={() => changeQueueView("awaiting_response")}
                 >
                     <span>
                         Awaiting Response
                     </span>
 
                     <span className="ticket-queue-count">
-                        {
-                            queueCounts
-                                .awaitingResponse
-                        }
+                        {getQueueCount("awaiting_response")}
                     </span>
                 </button>
 
@@ -927,13 +577,11 @@ export default function TicketInboxPreview({
                             ? "ticket-queue-view active"
                             : "ticket-queue-view"
                     }
-                    onClick={() =>
-                        setQueueView("stale")
-                    }>
+                    onClick={() => changeQueueView("stale")}>
                     <span>Stale</span>
 
                     <span className="ticket-queue-count">
-                        {queueCounts.stale}
+                        {getQueueCount("stale")}
                     </span>
                 </button>
 
@@ -944,14 +592,12 @@ export default function TicketInboxPreview({
                             ? "ticket-queue-view active"
                             : "ticket-queue-view"
                     }
-                    onClick={() => {
-                        setQueueView("all")
-                    }}
+                    onClick={() => changeQueueView("all")}
                 >
                     <span>All Tickets</span>
 
                     <span className="ticket-queue-count">
-                        {queueCounts.all}
+                        {getQueueCount("all")}
                     </span>
                 </button>
 
@@ -964,16 +610,14 @@ export default function TicketInboxPreview({
                     }
                     onClick={() => {
                         setQueueView("mine")
+                        setPage(1)
                     }}
-                    disabled={!currentUserId}
                 >
 
                     <span>My Tickets</span>
 
                     <span className="ticket-queue-count">
-                        {currentUserId
-                            ? queueCounts.mine
-                            : "-"}
+                        {getQueueCount("mine")}
                     </span>
                 </button>
 
@@ -984,15 +628,11 @@ export default function TicketInboxPreview({
                             ? "ticket-queue-view active"
                             : "ticket-queue-view"
                     }
-                    onClick={() => {
-                        setQueueView(
-                            "unassigned"
-                        );
-                    }}
+                    onClick={() => changeQueueView("unassigned")}
                 >
                     <span>Unassigned</span>
                     <span className="ticket-queue-count">
-                        {queueCounts.unassigned}
+                        {getQueueCount("unassigned")}
                     </span>
                 </button>
             </div>
@@ -1035,6 +675,10 @@ export default function TicketInboxPreview({
 
                     <option value="in_progress">
                         In Progress
+                    </option>
+
+                    <option value="waiting_on_customer">
+                        Waiting on Customer
                     </option>
 
                     <option value="resolved">
@@ -1319,6 +963,8 @@ export default function TicketInboxPreview({
                     })}
                 </ul>
             )}
+
+            
         </section>
     );
 }
