@@ -5,7 +5,6 @@ import {
 } from "../socket/socket.js";
 
 import {
-    getWorkspaceContextRequest,
     getWorkspaceTicketsRequest,
 } from "../api/ticketApi.js";
 
@@ -267,8 +266,6 @@ export default function TicketInboxPreview({
         setPage(1);
     }
 
-    const [currentUserId, setCurrentUserId,] = useState(null);
-
     const [now, setNow] = useState(() => Date.now());
 
     const requestKey = JSON.stringify({
@@ -409,63 +406,6 @@ export default function TicketInboxPreview({
             events.forEach((event) => {
                 socket.off(event, scheduleQueueRefresh);
             });
-        };
-    }, [workspaceSlug]);
-
-    useEffect(() => {
-        if (!workspaceSlug) {
-            return;
-        }
-
-        const controller =
-            new AbortController();
-
-        let cancelled = false;
-
-        async function loadWorkspaceContext() {
-            try {
-                const result =
-                    await getWorkspaceContextRequest(
-                        workspaceSlug,
-                        {
-                            signal:
-                                controller.signal,
-                        }
-                    );
-
-                const userId =
-                    result?.data
-                        ?.currentUserId;
-
-                if (!cancelled) {
-                    setCurrentUserId(
-                        userId
-                            ? String(userId)
-                            : null
-                    );
-                }
-            } catch (error) {
-                if (
-                    cancelled ||
-                    error.name === "AbortError"
-                ) {
-                    return;
-                }
-
-                console.error(
-                    "Unable to load workspace context",
-                    error
-                );
-
-                setCurrentUserId(null);
-            }
-        }
-
-        loadWorkspaceContext();
-
-        return () => {
-            cancelled = true;
-            controller.abort();
         };
     }, [workspaceSlug]);
 
@@ -938,15 +878,10 @@ export default function TicketInboxPreview({
                                 <button
                                     type="button"
                                     className="button button-secondary ticket-view-button"
-                                    onClick={() => {
-                                        openTicket(ticketId);
-                                    }}
+                                    onClick={() => openTicket(ticketId)}
                                     disabled={isSelected}
                                 >
-                                    {isSelected
-                                        ? "Details open"
-                                        : "View details"
-                                    }
+                                    {isSelected ? "Details open" : "View details"}
                                 </button>
 
                                 {isSelected && (
@@ -964,7 +899,7 @@ export default function TicketInboxPreview({
                 </ul>
             )}
 
-            
+
         </section>
     );
 }
