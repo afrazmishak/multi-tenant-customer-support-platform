@@ -590,6 +590,7 @@ export default function TicketInboxPreview({
                                     event.target.value,
                             })
                         );
+                        setPage(1);
                     }}
                 />
 
@@ -899,7 +900,45 @@ export default function TicketInboxPreview({
                 </ul>
             )}
 
+            {!isLoading && !error && pagination && (
+                <footer className="ticket-queue-pagination">
+                    <p>
+                        Total matching tickets:{" "}
+                        {pagination.totalTickets}
+                    </p>
 
+                    <div className="ticket-pagination-controls">
+                        <button 
+                            type="button"
+                            className="button button-secondary"
+                            disabled={!pagination.hasPreviousPage}
+                            onClick={() => {
+                                setPage((current) =>
+                                    Math.max(1, current -1)
+                                );
+                            }}
+                        >
+                            Previous
+                        </button>
+
+                        <span>
+                            Page {pagination.page} of {" "}
+                            {Math.max(1, pagination.totalPages)}
+                        </span>
+
+                        <button 
+                            type="button"
+                            className="button button-secondary"
+                            disabled={!pagination.hasNextPage}
+                            onClick={() => {
+                                setPage((current) => current + 1);
+                            }}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </footer>
+            )}
         </section>
     );
 }

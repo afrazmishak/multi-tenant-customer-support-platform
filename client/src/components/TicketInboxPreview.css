@@ -428,3 +428,29 @@
     font-size: 12px;
     font-weight: 600;
 }
+
+
+.ticket-queue-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 20px 0;
+}
+
+.ticket-queue-pagination p {
+    margin: 0;
+    color: #94a3b8;
+}
+
+.ticket-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ticket-pagination-controls button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
