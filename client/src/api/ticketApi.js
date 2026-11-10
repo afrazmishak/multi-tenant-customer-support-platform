@@ -5,16 +5,52 @@ const API_BASE_URL = (
 
 export async function getWorkspaceTicketsRequest(
     workspaceSlug,
-    { signal } = {}
+    {
+        signal,
+        view = "active",
+        page = 1,
+        limit = 25,
+        search = "",
+        status = "all",
+        priority = "all",
+        sort = "updated_desc",
+    } = {}
 ) {
+    if (!workspaceSlug) {
+        throw new Error("Workspace slug is required");
+    }
+
+    const params = new URLSearchParams({
+        view,
+        page: String(page),
+        limit: String(limit),
+        sort,
+    });
+
+    if (search.trim()) {
+        params.set("search", search.trim());
+    }
+
+    if (status && status !== "all") {
+        params.set("status", status);
+    }
+
+    if (priority && priority !== "all") {
+        params.set("priority", priority);
+    }
+
     const url =
         `${API_BASE_URL}/workspaces/` +
-        `${encodeURIComponent(workspaceSlug)}/tickets`;
+        `${encodeURIComponent(workspaceSlug)}/tickets?` +
+        params.toString();
 
     const response = await fetch(url, {
         method: "GET",
         credentials: "include",
         signal,
+        headers: {
+            Accept: "application/json",
+        },
     });
 
     const result = await response.json();
@@ -22,6 +58,7 @@ export async function getWorkspaceTicketsRequest(
     if (!response.ok) {
         throw new Error(
             result?.message ||
+            result?.error?.message ||
             `Unable to load tickets (${response.status})`
         );
     }

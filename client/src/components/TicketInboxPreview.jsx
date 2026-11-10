@@ -298,20 +298,19 @@ export default function TicketInboxPreview({
 
         async function loadTickets() {
             try {
-                const result =
-                    await getWorkspaceTicketsRequest(
-                        workspaceSlug,
-                        {
-                            signal: controller.signal,
-                            view: queueView,
-                            page,
-                            limit: 25,
-                            search: queueFilters.search,
-                            status: queueFilters.status,
-                            priority: queueFilters.priority,
-                            sort: queueFilters.sort,
-                        }
-                    );
+                const result = await getWorkspaceTicketsRequest(
+                    workspaceSlug,
+                    {
+                        signal: controller.signal,
+                        view: queueView,
+                        page,
+                        limit: 25,
+                        search: queueFilters.search,
+                        status: queueFilters.status,
+                        priority: queueFilters.priority,
+                        sort: queueFilters.sort,
+                    }
+                );
 
                 const tickets = result?.data?.tickets;
                 const pagination = result?.data?.pagination;
@@ -908,13 +907,13 @@ export default function TicketInboxPreview({
                     </p>
 
                     <div className="ticket-pagination-controls">
-                        <button 
+                        <button
                             type="button"
                             className="button button-secondary"
                             disabled={!pagination.hasPreviousPage}
                             onClick={() => {
                                 setPage((current) =>
-                                    Math.max(1, current -1)
+                                    Math.max(1, current - 1)
                                 );
                             }}
                         >
@@ -926,7 +925,7 @@ export default function TicketInboxPreview({
                             {Math.max(1, pagination.totalPages)}
                         </span>
 
-                        <button 
+                        <button
                             type="button"
                             className="button button-secondary"
                             disabled={!pagination.hasNextPage}

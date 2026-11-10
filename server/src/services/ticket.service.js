@@ -450,31 +450,20 @@ function buildTicketFilter(
 
     if (options.search) {
         const escapedSearch =
-            escapeRegularExpression(
-                options.search
-            );
+            escapeRegularExpression(options.search);
 
         const searchExpression = new RegExp(
-            escapedSearch,
-            "i"
+            escapedSearch, "i"
         );
 
         const searchConditions = [
-            {
-                subject: searchExpression,
-            },
-            {
-                description: searchExpression,
-            },
-            {
-                category: searchExpression,
-            },
+            { subject: searchExpression },
+            { description: searchExpression },
+            { category: searchExpression },
         ];
 
         const searchedTicketNumber =
-            parseTicketNumberSearch(
-                options.search
-            );
+            parseTicketNumberSearch(options.search);
 
         if (searchedTicketNumber !== null) {
             searchConditions.push({
