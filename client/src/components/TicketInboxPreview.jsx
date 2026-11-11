@@ -371,6 +371,7 @@ export default function TicketInboxPreview({
         }
 
         let refreshTimeout = null;
+        let hasConnected = socket.connected;
 
         function scheduleQueueRefresh() {
             if (refreshTimeout !== null) {
@@ -386,6 +387,19 @@ export default function TicketInboxPreview({
             }, 250);
         }
 
+        function handleSocketDisconnect() {
+            hasConnected = false;
+        }
+
+        function handleSocketConnect() {
+            // Revalidate only after a connection interruption.
+            if (!hasConnected) {
+                scheduleQueueRefresh();
+            }
+
+            hasConnected = true;
+        }
+
         const events = [
             "ticket:created",
             "ticket:updated",
@@ -397,6 +411,9 @@ export default function TicketInboxPreview({
             socket.on(event, scheduleQueueRefresh);
         });
 
+        socket.on("disconnect", handleSocketDisconnect);
+        socket.on("connect", handleSocketConnect);
+
         return () => {
             if (refreshTimeout !== null) {
                 clearTimeout(refreshTimeout);
@@ -405,6 +422,9 @@ export default function TicketInboxPreview({
             events.forEach((event) => {
                 socket.off(event, scheduleQueueRefresh);
             });
+
+            socket.off("disconnect", handleSocketDisconnect);
+            socket.on("connect", handleSocketConnect);
         };
     }, [workspaceSlug]);
 
