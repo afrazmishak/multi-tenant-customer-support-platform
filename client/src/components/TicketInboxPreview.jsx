@@ -14,6 +14,8 @@ import {
 
 import TicketDetailsDrawer from "./TicketDetailsDrawer.jsx";
 
+import useDebouncedValue from "../hooks/useDebouncedValue.js";
+
 import "./TicketInboxPreview.css";
 
 function formatLabel(value) {
@@ -254,6 +256,11 @@ export default function TicketInboxPreview({
             sort: "updated_desc",
         });
 
+    const debouncedSearch = useDebouncedValue(
+        queueFilters.search,
+        400
+    );
+
     const [queueView, setQueueView] =
         useState("active");
 
@@ -272,7 +279,7 @@ export default function TicketInboxPreview({
         workspaceSlug,
         view: queueView,
         page,
-        search: queueFilters.search,
+        search: debouncedSearch,
         status: queueFilters.status,
         priority: queueFilters.priority,
         sort: queueFilters.sort,
@@ -305,7 +312,7 @@ export default function TicketInboxPreview({
                         view: queueView,
                         page,
                         limit: 25,
-                        search: queueFilters.search,
+                        search: debouncedSearch,
                         status: queueFilters.status,
                         priority: queueFilters.priority,
                         sort: queueFilters.sort,
@@ -357,7 +364,7 @@ export default function TicketInboxPreview({
         workspaceSlug,
         queueView,
         page,
-        queueFilters.search,
+        debouncedSearch,
         queueFilters.status,
         queueFilters.priority,
         queueFilters.sort,
@@ -608,6 +615,7 @@ export default function TicketInboxPreview({
                                 search:
                                     event.target.value,
                             })
+                        
                         );
                         setPage(1);
                     }}
@@ -623,6 +631,8 @@ export default function TicketInboxPreview({
                                     event.target.value,
                             })
                         );
+
+                        setPage(1);
                     }}
                 >
                     <option value="all">
@@ -660,6 +670,8 @@ export default function TicketInboxPreview({
                                     event.target.value,
                             })
                         );
+
+                        setPage(1);
                     }}
                 >
                     <option value="all">
@@ -693,6 +705,8 @@ export default function TicketInboxPreview({
                                     event.target.value,
                             })
                         );
+
+                        setPage(1);
                     }}
                 >
                     <option value="updated_desc">
@@ -730,6 +744,8 @@ export default function TicketInboxPreview({
                             priority: "all",
                             sort: "updated_desc",
                         });
+
+                        setPage(1);
                     }}
                 >
                     Clear filters
