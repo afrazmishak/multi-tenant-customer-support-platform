@@ -795,6 +795,51 @@ export async function listTickets({
     };
 }
 
+export async function getTicketQueueSummary({
+    workspaceId,
+    actorUserId,
+}) {
+    const normalizedWorkspaceId = normalizeObjectId(
+        workspaceId,
+        "Workspace ID"
+    );
+
+    const normalizedActorUserId = normalizeObjectId(
+        actorUserId,
+        "Authenticated user ID"
+    );
+
+    const views = [
+        "active",
+        "awaiting_response",
+        "stale",
+        "all",
+        "mine",
+        "unassigned",
+    ];
+
+    const counts = await Promise.all(
+        views.map((view) => {
+            const viewFilter = buildQueueViewFilter(
+                view,
+                normalizedActorUserId
+            );
+
+            return Ticket.countDocuments({
+                workspace: normalizedWorkspaceId,
+                ...viewFilter,
+            });
+        })
+    );
+
+    return Object.fromEntries(
+        views.map((view, index) => [
+            view,
+            counts[index],
+        ])
+    );
+}
+
 export async function getTicketById({
     workspaceId,
     ticketId,

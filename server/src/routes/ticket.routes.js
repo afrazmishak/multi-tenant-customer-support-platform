@@ -7,6 +7,7 @@ import {
     getTicketController,
     listTicketsController,
     updateTicketController,
+    getTicketQueueSummaryController,
 } from "../controllers/ticket.controller.js";
 
 import {
@@ -72,6 +73,13 @@ router
         authorizeRoles(...TICKET_CREATE_ROLES),
         createTicketController
     );
+
+// Queue Summary - authenticated, workspace-scoped
+router.get(
+    "/queue-summary",
+    authorizeRoles(...TICKET_READ_ROLES),
+    getTicketQueueSummaryController
+);
 
 router.patch(
     "/:ticketId/assignment",

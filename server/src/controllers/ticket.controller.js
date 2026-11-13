@@ -13,6 +13,7 @@ import {
     getTicketById,
     listTickets,
     updateTicket,
+    getTicketQueueSummary,
 } from "../services/ticket.service.js";
 
 function getWorkspaceIdFromRequest(req) {
@@ -101,6 +102,22 @@ export const listTicketsController = asyncHandler(
                 tickets: result.tickets,
                 pagination: result.pagination,
                 filters: result.filters,
+            },
+        });
+    }
+);
+
+export const getTicketQueueSummaryController = asyncHandler(
+    async (req, res) => {
+        const summary = await getTicketQueueSummary({
+            workspaceId: req.workspace._id,
+            actorUserId: req.user._id,
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                summary,
             },
         });
     }
