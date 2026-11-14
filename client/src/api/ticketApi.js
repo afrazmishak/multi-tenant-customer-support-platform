@@ -66,6 +66,40 @@ export async function getWorkspaceTicketsRequest(
     return result;
 }
 
+export async function getTicketQueueSummaryRequest(
+    workspaceSlug,
+    { signal } = {}
+) {
+    if (!workspaceSlug) {
+        throw new Error("Workspace slug is required")
+    }
+
+    const url = 
+        `${API_BASE_URL}/workspaces/` +
+        `${encodeURIComponent(workspaceSlug)}/tickets/queue-summary`;
+
+    const response = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        signal,
+        headers: {
+            Accept: "application/json",
+        },
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            result?.message ||
+            result?.error?.message ||
+            `Unable to load queue summary (${response.status})`
+        );
+    }
+
+    return result;
+}
+
 export async function getTicketByIdRequest(
     workspaceSlug,
     ticketId,

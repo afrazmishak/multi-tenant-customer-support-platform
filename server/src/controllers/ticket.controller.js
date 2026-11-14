@@ -109,9 +109,13 @@ export const listTicketsController = asyncHandler(
 
 export const getTicketQueueSummaryController = asyncHandler(
     async (req, res) => {
+        const workspaceId = getWorkspaceIdFromRequest(req);
+
+        const actorUserId = getAuthenticatedUserId(req);
+
         const summary = await getTicketQueueSummary({
-            workspaceId: req.workspace._id,
-            actorUserId: req.user._id,
+            workspaceId,
+            actorUserId,
         });
 
         return res.status(200).json({

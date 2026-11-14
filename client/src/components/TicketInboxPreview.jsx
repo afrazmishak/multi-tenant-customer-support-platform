@@ -6,6 +6,7 @@ import {
 
 import {
     getWorkspaceTicketsRequest,
+    getTicketQueueSummaryRequest,
 } from "../api/ticketApi.js";
 
 import {
@@ -268,6 +269,12 @@ export default function TicketInboxPreview({
 
     const [refreshVersion, setRefreshVersion] = useState(0);
 
+    const [queueSummaryState, setQueueSummaryState] = useState({
+        workspaceSlug: null,
+        summary: null,
+        error: null,
+    });
+
     function changeQueueView(nextView) {
         setQueueView(nextView);
         setPage(1);
@@ -377,6 +384,78 @@ export default function TicketInboxPreview({
             return;
         }
 
+        const controller = new AbortController();
+        let cancelled = false;
+
+        async function loadQueueSummary() {
+            try {
+                const result = await getTicketQueueSummaryRequest(
+                    workspaceSlug,
+                    {
+                        signal: controller.signal,
+                    }
+                );
+
+                const summary = result?.data?.summary;
+
+                const views = [
+                    "active",
+                    "awaiting_response",
+                    "stale",
+                    "all",
+                    "mine",
+                    "unassigned",
+                ];
+
+                if (
+                    !summary ||
+                    !views.every(
+                        (view) =>
+                            Number.isSafeInteger(summary[view]) &&
+                            summary[view] >= 0
+                    )
+                ) {
+                    throw new Error(
+                        "Unexpected queue summary response"
+                    );
+                }
+
+                if (!cancelled) {
+                    setQueueSummaryState({
+                        workspaceSlug,
+                        summary,
+                        error: null,
+                    });
+                }
+            } catch (error) {
+                if (
+                    cancelled ||
+                    error.name === "AbortError"
+                ) {
+                    return;
+                }
+
+                setQueueSummaryState({
+                    workspaceSlug,
+                    summary: null,
+                    error: error.message,
+                });
+            }
+        }
+
+        loadQueueSummary();
+
+        return () => {
+            cancelled = true;
+            controller.abort();
+        };
+    }, [workspaceSlug, refreshVersion]);
+
+    useEffect(() => {
+        if (!workspaceSlug) {
+            return;
+        }
+
         let refreshTimeout = null;
         let hasConnected = socket.connected;
 
@@ -460,11 +539,11 @@ export default function TicketInboxPreview({
         : ticketState.pagination;
 
     function getQueueCount(view) {
-        if (queueView !== view) {
+        if (queueSummaryState.workspaceSlug !== workspaceSlug) {
             return "—";
         }
 
-        return pagination?.totalTickets ?? "—";
+        return queueSummaryState.summary?.[view] ?? "—";
     }
 
     const visibleTickets = tickets;
@@ -493,6 +572,13 @@ export default function TicketInboxPreview({
                     <p className="ticket-inbox-description">
                         Tickets belonging to the current workspace.
                     </p>
+                    {queueSummaryState.workspaceSlug === workspaceSlug &&
+                        queueSummaryState.error && (
+                            <p role="alert" className="ticket-inbox-summary-error">
+                                Unable to load queue counts: {queueSummaryState.error}
+                            </p>
+                        )
+                    }
                 </div>
 
                 {!isLoading && !error && (
@@ -615,7 +701,7 @@ export default function TicketInboxPreview({
                                 search:
                                     event.target.value,
                             })
-                        
+
                         );
                         setPage(1);
                     }}
