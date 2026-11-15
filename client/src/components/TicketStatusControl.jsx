@@ -6,16 +6,21 @@ import {
     updateTicketStatusRequest,
 } from "../api/ticketApi.js";
 
-const BASIC_STATUS_OPTIONS = [
-    {
-        value: "open",
-        label: "Open",
-    },
-    {
-        value: "in_progress",
-        label: "In Progress",
-    },
-];
+const STATUS_LABELS = {
+    open: "Open",
+    in_progress: "In Progress",
+    waiting_on_customer: "Waiting on Customer",
+    resolved: "Resolved",
+    closed: "Closed",
+};
+
+const BASIC_STATUS_TRANSITIONS = {
+    open: ["in_progress"],
+    in_progress: ["waiting_on_customer"],
+    waiting_on_customer: ["in_progress"],
+    resolved: [],
+    closed: [],
+};
 
 function formatLabel(value) {
     if (!value) {
@@ -70,23 +75,25 @@ export default function TicketStatusControl({
         }
     }
 
-    const currentStatusIsBasic =
-        BASIC_STATUS_OPTIONS.some(
-            (option) =>
-                option.value === status
-        );
+    const allowedNextStatuses = 
+        BASIC_STATUS_TRANSITIONS[status] ?? [];
 
-    const statusOptions =
-        !currentStatusIsBasic && status
-            ? [
-                {
-                    value: status,
-                    label: formatLabel(status),
-                    disabled: true,
-                },
-                ...BASIC_STATUS_OPTIONS,
-            ]
-            : BASIC_STATUS_OPTIONS;
+    const statusOptions = [
+        {
+            value: status ?? "",
+            label: STATUS_LABELS[status] ?? formatLabel(status),
+        },
+        ...allowedNextStatuses.map((nextStatus) => ({
+            value: nextStatus,
+            label:
+                STATUS_LABELS[nextStatus] ??
+                formatLabel(nextStatus),
+        })),
+    ];
+
+    const isStatusControlDisabled = 
+        isUpdating ||
+        allowedNextStatuses.length === 0;
 
     return (
         <section className="ticket-status-control">
@@ -98,11 +105,7 @@ export default function TicketStatusControl({
                 id={`ticket-status-${ticketId}`}
                 value={status ?? ""}
                 onChange={handleStatusChange}
-                disabled={
-                    isUpdating ||
-                    status === "resolved" ||
-                    status === "closed"
-                }
+                disabled={isStatusControlDisabled}
             >
                 {statusOptions.map(
                     (option) => (

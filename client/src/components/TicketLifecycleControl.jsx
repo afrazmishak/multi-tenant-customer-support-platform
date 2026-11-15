@@ -31,14 +31,14 @@ export default function TicketLifecycleControl({
 
     const canResolve =
         status === "open" ||
-        status === "in_progress";
+        status === "in_progress" ||
+        status === "waiting_on_customer";
 
     const canClose =
         status === "resolved";
 
     const canReopen =
-        status === "resolved" ||
-        status === "closed";
+        status === "resolved";
 
     async function changeStatus(input) {
         setIsUpdating(true);
