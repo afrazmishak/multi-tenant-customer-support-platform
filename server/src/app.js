@@ -17,7 +17,6 @@ import { notFound } from "./middleware/notFound.middleware.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
-app.use(express.json());
 
 app.disable("x-powered-by");
 
