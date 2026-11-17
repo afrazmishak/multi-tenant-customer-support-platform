@@ -4,7 +4,15 @@ export async function connectDatabase() {
     const mongoUri = process.env.MONGODB_URI;
 
     if (!mongoUri) {
-        throw new Error("MONGODB_URI is not defined in the environment variables");
+        throw new Error(
+            "MONGODB_URI is not defined in the environment variables"
+        );
+    }
+
+    if (process.env.NODE_ENV === "test") {
+        throw new Error(
+            "Test mode must use an explicitly configured, isolated test database connection"
+        );
     }
 
     mongoose.set("strictQuery", true);
