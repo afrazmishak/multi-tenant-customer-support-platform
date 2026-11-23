@@ -23,7 +23,11 @@ export async function withIsolatedDatabase(runTest) {
     let mongod;
 
     try {
-        mongod = await MongoMemoryServer.create();
+        mongod = await MongoMemoryServer.create({
+            binary: {
+                arch: "x64",
+            },
+        });
 
         const uri = mongod.getUri(
             "customer_support_test"
