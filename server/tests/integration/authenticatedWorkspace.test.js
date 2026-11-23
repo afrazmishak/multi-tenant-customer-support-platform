@@ -1,14 +1,10 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import request from "supertest";
 
 import app from "../../src/app.js";
 
 import {
-    User,
-    Tenant,
-    Membership,
     initializeModels,
 } from "../../src/models/index.js";
 
@@ -16,13 +12,17 @@ import {
     MEMBERSHIP_ROLES,
 } from "../../src/constants/membership.constants.js";
 
-import {
-    hashPassword,
-} from "../../src/utils/password.js";
 
 import {
     withIsolatedDatabase,
 } from "../helpers/withIsolatedDatabase.js";
+
+import {
+    createTestUser,
+    createTestWorkspace,
+    createTestMembership,
+    createAuthenticatedAgent,
+} from "../helpers/createTestWorkspace.js";
 
 test(
     "authenticated user can access only their workspace",
@@ -39,20 +39,20 @@ test(
                 // Create an isolated test user.
                 const password = "TestPassword123!";
 
-                const user = await User.create({
+                const user = await createTestUser({
                     name: "Integration Test Owner",
                     email: "owner@test.example",
-                    passwordHash: await hashPassword(password),
+                    password,
                 });
 
                 // Create two separate workspaces.
-                const workspaceA = await Tenant.create({
+                const workspaceA = await createTestWorkspace({
                     name: "Integration Workspace A",
                     slug: "integration-workspace-a",
                     createdBy: user._id,
                 });
 
-                const workspaceB = await Tenant.create({
+                const workspaceB = await createTestWorkspace({
                     name: "Integration Workspace B",
                     slug: "integration-workspace-b",
                     createdBy: user._id,
