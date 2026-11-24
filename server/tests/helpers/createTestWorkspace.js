@@ -63,7 +63,7 @@ export async function createAuthenticatedAgent({
     const agent = request.agent(app);
 
     const response = await agent
-        .past("/api/auth/login")
+        .post("/api/auth/login")
         .send({
             email,
             password,

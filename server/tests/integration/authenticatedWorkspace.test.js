@@ -59,68 +59,41 @@ test(
                 });
 
                 // The user belongs ONLY to Workspace A.
-                await Membership.create({
+                await createTestMembership({
                     tenantId: workspaceA._id,
                     userId: user._id,
                     role: MEMBERSHIP_ROLES.OWNER,
                 });
 
                 // Preserve authentication cookies.
-                const agent = request.agent(app);
+                const agent = await createAuthenticatedAgent({
+                    app,
+                    email: user.email,
+                    password,
+                });
 
-                const loginResponse = await agent
-                    .post("/api/auth/login")
-                    .send({
-                        email: "owner@test.example",
-                        password,
-                    });
+                const ownResponse = await agent.get(
+                    `/api/workspaces/${workspaceA.slug}/context`
+                );
 
                 assert.equal(
-                    loginResponse.status,
+                    ownResponse.status,
                     200,
-                    JSON.stringify(loginResponse.body)
+                    JSON.stringify(ownResponse.body)
+                );
+
+                const foreignResponse = await agent.get(
+                    `/api/workspaces/${workspaceB.slug}/context`
                 );
 
                 assert.equal(
-                    loginResponse.body.success,
-                    true
-                );
-
-                // Confirm that login issued a cookie.
-                const cookies =
-                    loginResponse.headers["set-cookie"];
-
-                assert.ok(
-                    cookies && cookies.length > 0,
-                    "Login must issue an authentication cookie"
-                );
-
-                // Confirm access to Workspace A.
-                const ownWorkspaceResponse = await agent
-                    .get(
-                        `/api/workspaces/${workspaceA.slug}/context`
-                    );
-
-                assert.equal(
-                    ownWorkspaceResponse.status,
-                    200,
-                    JSON.stringify(ownWorkspaceResponse.body)
-                );
-
-                // Confirm denial for Workspace B.
-                const foreignWorkspaceResponse = await agent
-                    .get(
-                        `/api/workspaces/${workspaceB.slug}/context`
-                    );
-
-                assert.equal(
-                    foreignWorkspaceResponse.status,
+                    foreignResponse.status,
                     403,
-                    JSON.stringify(foreignWorkspaceResponse.body)
+                    JSON.stringify(foreignResponse.body)
                 );
 
                 assert.equal(
-                    foreignWorkspaceResponse.body.success,
+                    foreignResponse.body.success,
                     false
                 );
             });
