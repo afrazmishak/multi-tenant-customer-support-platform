@@ -153,6 +153,60 @@ test(
                     200,
                     JSON.stringify(directoryResponse.body)
                 );
+
+                // Verify workspace-specific RBAC: OWNER in Workspace A, Agent in Workspace B.
+                const workspaceB = await createTestWorkspace({
+                    name: "RBAC Secondary Workspace",
+                    slug: "rbac-secondary-workspace",
+                    createdBy: owner._id,
+                });
+
+                // The same user is only an AGENT in Workspace B.
+                await createTestMembership({
+                    tenantId: workspaceB._id,
+                    userId: owner._id,
+                    role: MEMBERSHIP_ROLES.AGENT,
+                });
+
+                // OWNER permissions remain valid in Workspace A.
+                const ownerWorkspaceAResponse =
+                    await ownerClient.get(
+                        `/api/workspaces/${workspace.slug}/members`
+                    );
+
+                assert.equal(
+                    ownerWorkspaceAResponse.status,
+                    200,
+                    JSON.stringify(ownerWorkspaceAResponse.body)
+                );
+
+                // OWNER privileges must not carry into Workspace B.
+                const agentWorkspaceBResponse =
+                    await ownerClient.get(
+                        `/api/workspaces/${workspaceB.slug}/members`
+                    );
+
+                assert.equal(
+                    agentWorkspaceBResponse.status,
+                    403,
+                    JSON.stringify(agentWorkspaceBResponse.body)
+                );
+
+                assert.equal(
+                    agentWorkspaceBResponse.body.success,
+                    false
+                );
+
+                // Ordinary Agent-level directory access must still work.
+                const directoryWorkspaceBRepsonse = await ownerClient.get(
+                    `/api/workspaces/${workspaceB.slug}/directory`
+                );
+
+                assert.equal(
+                    directoryWorkspaceBRepsonse.status,
+                    200,
+                    JSON.stringify(directoryWorkspaceBRepsonse.body)
+                );
             });
         } finally {
             // Restore the previous environment.

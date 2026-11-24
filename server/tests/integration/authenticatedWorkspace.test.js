@@ -96,6 +96,50 @@ test(
                     foreignResponse.body.success,
                     false
                 );
+
+                // Ticket API tenant isolation tests.
+                // Authorized user can access their own ticket queue.
+                const ownTicketResponse = await agent.get(
+                    `/api/workspaces/${workspaceA.slug}/tickets?view=all`
+                );
+
+                assert.equal(
+                    ownTicketResponse.status,
+                    200,
+                    JSON.stringify(ownTicketResponse.body)
+                );
+
+                // User must not access another workspace's tickets.
+                const foreignTicketsResponse = await agent.get(
+                    `/api/workspaces/${workspaceB.slug}/tickets?view=all`
+                );
+
+                assert.equal(
+                    foreignTicketsResponse.status,
+                    403,
+                    JSON.stringify(foreignTicketsResponse.body)
+                );
+
+                assert.equal(
+                    foreignTicketsResponse.body.success,
+                    false
+                );
+
+                // User must not access another workspace's queue counts.
+                const foriegnSummaryResponse = await agent.get(
+                    `/api/workspaces/${workspaceB.slug}/tickets/queue-summary`
+                );
+
+                assert.equal(
+                    foriegnSummaryResponse.status,
+                    403,
+                    JSON.stringify(foriegnSummaryResponse.body)
+                );
+
+                assert.equal(
+                    foriegnSummaryResponse.body.success,
+                    false
+                );
             });
         } finally {
             // Restore the environment for other code.
