@@ -67,14 +67,16 @@ test("foreign ticket status mutations are isolated", async () => {
                 createdBy: userB._id,
             });
 
+            // User A belongs to Workspace A.
             await createTestMembership({
                 tenantId: workspaceA._id,
                 userId: userA._id,
                 role: MEMBERSHIP_ROLES.OWNER,
             });
 
+            // User B belongs to Workspace B.
             await createTestMembership({
-                tenantId: workspaceA._id,
+                tenantId: workspaceB._id,
                 userId: userB._id,
                 role: MEMBERSHIP_ROLES.OWNER,
             });
@@ -164,7 +166,7 @@ test("foreign ticket status mutations are isolated", async () => {
             assert.equal(
                 crossTenantResponse.status,
                 404,
-                JOSN.stringify(crossTenantResponse.body)
+                JSON.stringify(crossTenantResponse.body)
             );
 
             // Attack 2: Foreign workspace URL.
