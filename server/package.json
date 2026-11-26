@@ -21,6 +21,8 @@
     "ticket:activity:integration:check": "node src/scripts/verifyTicketActivityIntegration.js",
     "test": "node --test tests/unit/*.test.js",
     "test:unit": "node --test tests/unit/*.test.js",
+    "test:integration": "node --test tests/integration/*.test.js",
+    "test:all": "npm run test:unit && npm run test:integration",
     "test:coverage": "node --test --experimental-test-coverage tests/unit/*.test.js"
   },
   "keywords": [],

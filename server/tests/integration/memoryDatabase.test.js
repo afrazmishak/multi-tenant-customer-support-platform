@@ -15,7 +15,15 @@ test(
 
         try {
             // Start an isolated MongoDB instance.
-            mongod = await MongoMemoryServer.create();
+            const binaryOptions = 
+                process.platform === "win32" &&
+                process.arch === "arm64"
+                    ? { arch: "x64" }
+                    : {};
+            
+            mongod = await MongoMemoryServer.create({
+                binary: binaryOptions,
+            });
 
             // Obtain the URI from the actual running instance.
             const uri = mongod.getUri(
