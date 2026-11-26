@@ -12,7 +12,7 @@ import {
 import {
     emitTicketUpdated,
     emitTicketActivityChanged,
-} from "../../src/socket/ticketRealtime.jscle";
+} from "../../src/socket/ticketRealtime.js";
 
 import {
     getWorkspaceRoom,
