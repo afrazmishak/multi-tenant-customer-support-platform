@@ -1,8 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
+import http from "node:http";
 
 import app from "../../src/app.js";
+
+import {
+    initializeSocketServer,
+} from "../../src/socket/socket.js";
 
 import {
     initializeModels,
@@ -42,7 +47,7 @@ test("foreign ticket status mutations are isolated", async () => {
             ]);
 
             const password = "TestPassword123";
-            
+
             const userA = await createTestUser({
                 name: "Mutation Owner A",
                 email: "mutation-a@test.example",
@@ -62,7 +67,7 @@ test("foreign ticket status mutations are isolated", async () => {
             });
 
             const workspaceB = await createTestWorkspace({
-                name: "MMutation Workspace B",
+                name: "Mutation Workspace B",
                 slug: "mutation-workspace-b",
                 createdBy: userB._id,
             });
@@ -111,95 +116,119 @@ test("foreign ticket status mutations are isolated", async () => {
                 createdBy: userB._id,
             });
 
-            const clientA = await createAuthenticatedAgent({
-                app,
-                email: userA.email,
-                password,
-            });
+            const httpServer = http.createServer(app);
+            const ioServer = initializeSocketServer(httpServer);
 
-            const baseA = `/api/workspaces/${workspaceA.slug}/tickets`;
-            const baseB = `/api/workspaces/${workspaceB.slug}/tickets`;
+            try {
+                await new Promise((resolve, reject) => {
+                    httpServer.once("error", reject);
 
-            // Positive control: Owner A can modify Ticket A.
-            const authorizedResponse = await clientA
-                .patch(`${baseA}/${ticketA._id}/status`)
-                .send({ status: "in_progress" });
+                    httpServer.listen(0, "127.0.0.1", () => {
+                        httpServer.off("error", reject);
+                        resolve();
+                    });
+                });
 
-            assert.equal(
-                authorizedResponse.status,
-                200,
-                JSON.stringify(authorizedResponse.body)
-            );
+                const clientA = await createAuthenticatedAgent({
+                    app,
+                    email: userA.email,
+                    password,
+                });
 
-            const updatedOwnTicket = await Ticket.findById(
-                ticketA._id
-            );
+                const baseA = `/api/workspaces/${workspaceA.slug}/tickets`;
+                const baseB = `/api/workspaces/${workspaceB.slug}/tickets`;
 
-            assert.equal(
-                updatedOwnTicket.status,
-                "in_progress"
-            );
+                // Positive control: Owner A can modify Ticket A.
+                const authorizedResponse = await clientA
+                    .patch(`${baseA}/${ticketA._id}/status`)
+                    .send({ status: "in_progress" });
 
-            // Capture foreign ticket state before the attack.
-            const foreignBefore = await Ticket.findById(
-                ticketB._id
-            ).lean();
+                assert.equal(
+                    authorizedResponse.status,
+                    200,
+                    JSON.stringify(authorizedResponse.body)
+                );
 
-            assert.ok(foreignBefore);
+                const updatedOwnTicket = await Ticket.findById(
+                    ticketA._id
+                );
 
-            // Inspect the real activity model registered by the app.
-            const TicketActivity = mongoose.models.TicketActivity;
+                assert.equal(
+                    updatedOwnTicket.status,
+                    "in_progress"
+                );
 
-            assert.ok(
-                TicketActivity,
-                "TicketActivity model must be registered"
-            );
+                // Capture foreign ticket state before the attack.
+                const foreignBefore = await Ticket.findById(
+                    ticketB._id
+                ).lean();
 
-            const activityCountBefore =
-                await TicketActivity.countDocuments({});
+                assert.ok(foreignBefore);
 
-            // Attack 1: Valid Workspace A URL, foreign ticket ID.
-            const crossTenantResponse = await clientA
-                .patch(`${baseA}/${ticketB._id}/status`)
-                .send({ status: "in_progress" });
+                // Inspect the real activity model registered by the app.
+                const TicketActivity = mongoose.models.TicketActivity;
 
-            assert.equal(
-                crossTenantResponse.status,
-                404,
-                JSON.stringify(crossTenantResponse.body)
-            );
+                assert.ok(
+                    TicketActivity,
+                    "TicketActivity model must be registered"
+                );
 
-            // Attack 2: Foreign workspace URL.
-            const foreignWorkspaceResponse = await clientA
-                .patch(`${baseB}/${ticketB._id}/status`)
-                .send({ status: "in_progress" });
+                const activityCountBefore =
+                    await TicketActivity.countDocuments({});
 
-            assert.equal(
-                foreignWorkspaceResponse.status,
-                403,
-                JSON.stringify(foreignWorkspaceResponse.body)
-            );
+                // Attack 1: Valid Workspace A URL, foreign ticket ID.
+                const crossTenantResponse = await clientA
+                    .patch(`${baseA}/${ticketB._id}/status`)
+                    .send({ status: "in_progress" });
 
-            // Verify the foriegn ticket was not mutated.
-            const foreignAfter = await Ticket.findById(
-                ticketB._id
-            ).lean();
+                assert.equal(
+                    crossTenantResponse.status,
+                    404,
+                    JSON.stringify(crossTenantResponse.body)
+                );
 
-            assert.deepEqual(
-                foreignAfter,
-                foreignBefore,
-                "Foreign ticket must remain unchanged"
-            );
+                // Attack 2: Foreign workspace URL.
+                const foreignWorkspaceResponse = await clientA
+                    .patch(`${baseB}/${ticketB._id}/status`)
+                    .send({ status: "in_progress" });
 
-            // Verify no new activity records were written.
-            const activityCountAfter = await TicketActivity.countDocuments({});
+                assert.equal(
+                    foreignWorkspaceResponse.status,
+                    403,
+                    JSON.stringify(foreignWorkspaceResponse.body)
+                );
 
-            assert.equal(
-                activityCountAfter,
-                activityCountBefore,
-                "Rejected mutations must not create activities"
-            );
-        });
+                // Verify the foriegn ticket was not mutated.
+                const foreignAfter = await Ticket.findById(
+                    ticketB._id
+                ).lean();
+
+                assert.deepEqual(
+                    foreignAfter,
+                    foreignBefore,
+                    "Foreign ticket must remain unchanged"
+                );
+
+                // Verify no new activity records were written.
+                const activityCountAfter = await TicketActivity.countDocuments({});
+
+                assert.equal(
+                    activityCountAfter,
+                    activityCountBefore,
+                    "Rejected mutations must not create activities"
+                );
+            } finally {
+                await new Promise((resolve, reject) => {
+                    ioServer.close((error) => {
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve();
+                        }
+                    })
+                })
+            }
+        });   
     } finally {
         if (previousJwtSecret === undefined) {
             delete process.env.JWT_SECRET;
