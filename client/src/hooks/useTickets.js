@@ -11,13 +11,29 @@ export function useTickets({
     priority = "",
     status = "",
 }) {
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const requestKey = JSON.stringify([
+        workspaceSlug,
+        view,
+        page,
+        limit,
+        sort,
+        search,
+        priority,
+        status,
+    ]);
+
+    const [result, setResult] = useState({
+        requestKey: null,
+        data: null,
+        error: null,
+    });
 
     useEffect(() => {
-        let cancelled = false;
-        setLoading(true);
+        if (!workspaceSlug) {
+            return;
+        }
+
+        const controller = new AbortController();
 
         fetchTickets({
             workspaceSlug,
@@ -28,27 +44,33 @@ export function useTickets({
             search,
             priority,
             status,
+            signal: controller.signal,
         })
-            .then((result) => {
-                if (!cancelled) {
-                    setData(result);
-                    setError(null);
+            .then((data) => {
+                if (controller.signal.aborted) {
+                    return;
                 }
+
+                setResult({
+                    requestKey,
+                    data,
+                    error: null,
+                });
             })
-            .catch((err) => {
-                if (!cancelled) {
-                    setError(err.message);
-                    setData(null);
+            .catch((error) => {
+                if (controller.signal.aborted) {
+                    return;
                 }
-            })
-            .finally(() => {
-                if (!cancelled) {
-                    setLoading(false);
-                }
+
+                setResult({
+                    requestKey,
+                    data: null,
+                    error: error.message,
+                });
             });
 
         return () => {
-            cancelled = true;
+            controller.abort();
         };
     }, [
         workspaceSlug,
@@ -59,7 +81,22 @@ export function useTickets({
         search,
         priority,
         status,
+        requestKey,
     ]);
+
+    const isCurrentResult =
+        result.requestKey === requestKey;
+
+    const loading =
+        Boolean(workspaceSlug) && !isCurrentResult;
+
+    const data = isCurrentResult
+        ? result.data
+        : null;
+
+    const error = isCurrentResult
+        ? result.error
+        : null;
 
     return {
         tickets: data?.tickets ?? [],

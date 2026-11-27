@@ -1,6 +1,6 @@
-const API_BASE_URL = 
-    import.meta.env.VITE_API_URL ||
-    "http://localhost:5000/api";
+import {
+    getWorkspaceTicketsRequest,
+} from "./ticketApi.js";
 
 export async function fetchTickets({
     workspaceSlug,
@@ -11,65 +11,32 @@ export async function fetchTickets({
     search = "",
     priority = "",
     status = "",
+    signal,
 } = {}) {
-    if (!workspaceSlug) {
-        throw new Error("Workspace slug is required");
-    }
-
-    const params = new URLSearchParams({
-        view,
-        page: String(page),
-        limit: String(limit),
-        sort,
-    });
-
-    if (search.trim()) {
-        params.set("search", search.trim());
-    }
-
-    if (priority) {
-        params.set("priority", priority);
-    }
-
-    if (status) {
-        params.set("status", status);
-    }
-
-    const url = 
-        `${API_BASE_URL}/workspaces/` +
-        `${encodeURIComponent(workspaceSlug)}/tickets?` +
-        params.toString();
-
-    const response = await fetch(url, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-            Accept: "application/json"
-        },
-    });
-
-    const body = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            body.message ||
-            body.error?.message ||
-            `Failed to dethc tickets (${response.status})`
+    const response = 
+        await getWorkspaceTicketsRequest(
+            workspaceSlug,
+            {
+                view,
+                page,
+                limit,
+                sort,
+                search,
+                priority,
+                status,
+                signal,
+            }
         );
-    }
 
-
-    // Your controller may wrap the servcie output in the data
-    const result = body.data ?? body;
+    const result = response?.data;
 
     if (
-        !Array.isArray(result.tickets) ||
-        !result.pagination
+        !Array.isArray(result?.tickets) ||
+        !result?.pagination
     ) {
         throw new Error(
             "Unexpected ticket queue response structure"
         );
     }
-
     return result;
 }

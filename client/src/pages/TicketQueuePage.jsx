@@ -49,7 +49,7 @@ export default function TicketQueuePage({
         limit: 25,
     });
 
-    function chnageView(nextView) {
+    function changeView(nextView) {
         setView(nextView);
         setPage(1);
     }
@@ -81,7 +81,7 @@ export default function TicketQueuePage({
                                 : undefined
                         }
                         onClick={() =>
-                            chnageView(item.value)
+                            changeView(item.value)
                         }
                     >
                         {item.label}
@@ -135,7 +135,7 @@ export default function TicketQueuePage({
 
                                     <tbody>
                                         {tickets.map((ticket) => (
-                                            <tr key={ticket.id}>
+                                            <tr key={ticket._id}>
                                                 <td>{ticket.reference ??
                                                     `#${ticket.ticketNumber}`}
                                                 </td>
@@ -162,7 +162,7 @@ export default function TicketQueuePage({
 
                                                 <td>
                                                     {formatDate(
-                                                        ticket.lastActivity ??
+                                                        ticket.lastActivityAt ??
                                                         ticket.updatedAt
                                                     )}
                                                 </td>
