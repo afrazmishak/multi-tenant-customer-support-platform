@@ -45,5 +45,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Audit backend dependencies
+        run: npm audit --audit-level=moderate
+
       - name: Run complete backend regression
         run: npm run test:all
